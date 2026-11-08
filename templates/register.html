@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div style="max-width: 460px; margin: 3rem auto;">
+  <div class="glass-card" style="padding: 2.5rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 44px; height: 44px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+        </svg>
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em;">Create Free Account</h1>
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.35rem;">
+        Enable personalized prediction history with secure password hashing
+      </p>
+    </div>
+
+    <div id="registerAlert" class="alert alert-error" style="display: none;"></div>
+
+    <form id="registerForm" onsubmit="return false;">
+      <div class="form-group">
+        <label for="regFullName" class="form-label">Full Name</label>
+        <input type="text" id="regFullName" class="form-control" placeholder="Dr. Hemanth Kumar" required autocomplete="name">
+      </div>
+
+      <div class="form-group">
+        <label for="regEmail" class="form-label">Email Address</label>
+        <input type="email" id="regEmail" class="form-control" placeholder="researcher@meteorology.org" required autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label for="regPassword" class="form-label">Password (min 8 chars)</label>
+        <input type="password" id="regPassword" class="form-control" placeholder="At least 8 characters" minlength="8" required autocomplete="new-password">
+      </div>
+
+      <div class="form-group">
+        <label for="regConfirmPassword" class="form-label">Confirm Password</label>
+        <input type="password" id="regConfirmPassword" class="form-control" placeholder="Repeat your password" minlength="8" required autocomplete="new-password">
+      </div>
+
+      <button type="submit" id="regSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.85rem;">
+        <span id="regSpinner" class="spinner" style="display: none;"></span>
+        <span id="regBtnText">Create Secure Account</span>
+      </button>
+    </form>
+
+    <div style="margin-top: 1.75rem; text-align: center; font-size: 0.875rem; color: var(--text-secondary); border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.25rem;">
+      Already have an account? 
+      <a href="{{ url_for('login_page') }}" style="color: var(--accent-cyan); font-weight: 600; text-decoration: none;">Sign in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertEl = document.getElementById('registerAlert');
+  const spinner = document.getElementById('regSpinner');
+  const btnText = document.getElementById('regBtnText');
+  const btn = document.getElementById('regSubmitBtn');
+
+  const fullName = document.getElementById('regFullName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+  if (password !== confirmPassword) {
+    alertEl.textContent = 'Passwords do not match. Please re-enter.';
+    alertEl.style.display = 'flex';
+    return;
+  }
+
+  if (password.length < 8) {
+    alertEl.textContent = 'Password must be at least 8 characters long.';
+    alertEl.style.display = 'flex';
+    return;
+  }
+
+  alertEl.style.display = 'none';
+  spinner.style.display = 'inline-block';
+  btnText.textContent = 'Creating Account...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name: fullName, email, password })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      window.location.href = '/dashboard';
+    } else {
+      alertEl.textContent = data.error || 'Failed to create account.';
+      alertEl.style.display = 'flex';
+      spinner.style.display = 'none';
+      btnText.textContent = 'Create Secure Account';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    alertEl.textContent = 'Network error. Please try again.';
+    alertEl.style.display = 'flex';
+    spinner.style.display = 'none';
+    btnText.textContent = 'Create Secure Account';
+    btn.disabled = false;
+  }
+});
+</script>
+{% endblock %}

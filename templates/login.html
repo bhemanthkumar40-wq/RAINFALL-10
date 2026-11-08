@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div style="max-width: 440px; margin: 3rem auto;">
+  <div class="glass-card" style="padding: 2.5rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 44px; height: 44px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+        </svg>
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em;">Welcome Back</h1>
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.35rem;">
+        Sign in to access your personal prediction history
+      </p>
+    </div>
+
+    <div id="authAlert" class="alert alert-error" style="display: none;"></div>
+
+    <form id="loginForm" onsubmit="return false;">
+      <div class="form-group">
+        <label for="loginEmail" class="form-label">Email Address</label>
+        <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword" class="form-label">Password</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.85rem;">
+        <span id="loginSpinner" class="spinner" style="display: none;"></span>
+        <span id="loginBtnText">Sign In</span>
+      </button>
+    </form>
+
+    <div style="margin-top: 1.75rem; text-align: center; font-size: 0.875rem; color: var(--text-secondary); border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.25rem;">
+      Don't have an account yet? 
+      <a href="{{ url_for('register_page') }}" style="color: var(--accent-cyan); font-weight: 600; text-decoration: none;">Create one here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertEl = document.getElementById('authAlert');
+  const spinner = document.getElementById('loginSpinner');
+  const btnText = document.getElementById('loginBtnText');
+  const btn = document.getElementById('loginSubmitBtn');
+  
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  alertEl.style.display = 'none';
+  spinner.style.display = 'inline-block';
+  btnText.textContent = 'Verifying...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      window.location.href = new URLSearchParams(window.location.search).get('next') || '/dashboard';
+    } else {
+      alertEl.textContent = data.error || 'Authentication failed. Please verify credentials.';
+      alertEl.style.display = 'flex';
+      spinner.style.display = 'none';
+      btnText.textContent = 'Sign In';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    alertEl.textContent = 'Network error. Please try again.';
+    alertEl.style.display = 'flex';
+    spinner.style.display = 'none';
+    btnText.textContent = 'Sign In';
+    btn.disabled = false;
+  }
+});
+</script>
+{% endblock %}

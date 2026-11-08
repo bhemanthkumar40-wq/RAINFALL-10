@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">Personal Prediction History</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+        Securely isolated forecast logs for {{ current_user.full_name }} ({{ current_user.email }})
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button id="exportCsvBtn" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export CSV
+      </button>
+      <button id="clearHistoryBtn" class="btn btn-danger btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Clear All Logs
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="glass-card">
+  <!-- Filter Controls -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <label for="historyFilterRegion" style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 500;">Filter by Subdivision:</label>
+      <select id="historyFilterRegion" class="form-control" style="width: 240px; padding: 0.45rem 0.75rem; font-size: 0.875rem;">
+        <option value="">All Subdivisions</option>
+      </select>
+    </div>
+
+    <div style="font-size: 0.85rem; color: var(--text-muted);">
+      Total Logged Forecasts: <strong style="color: var(--accent-cyan);" id="historyTotalCount">0</strong>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="historyLoading" style="text-align: center; padding: 3rem 0; display: none;">
+    <div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--accent-cyan); margin: 0 auto 1rem;"></div>
+    <p style="color: var(--text-muted);">Loading your encrypted forecast logs...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div id="historyEmpty" style="text-align: center; padding: 4rem 1rem; display: none;">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+      </svg>
+    </div>
+    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No Prediction Logs Yet</h3>
+    <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto 1.5rem; font-size: 0.925rem;">
+      Forecasts generated while signed in are automatically stored under your private account.
+    </p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Make Your First Prediction</a>
+  </div>
+
+  <!-- Table State -->
+  <div class="table-responsive" id="historyTableWrapper" style="display: none;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Subdivision</th>
+          <th>Month</th>
+          <th>Algorithm</th>
+          <th>Probability</th>
+          <th>Classification</th>
+          <th>Projected Rainfall</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="historyTableBody">
+        <!-- Rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}

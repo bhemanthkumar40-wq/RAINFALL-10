@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Model Benchmarks & Performance{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">Model Benchmarks &amp; Performance</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+        Empirical evaluation of 7 classification algorithms on held-out test data (9,879 records)
+      </p>
+    </div>
+
+    <div>
+      <button id="retrainModelsBtn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+        <span id="retrainSpinner" class="spinner" style="display: none;"></span>
+        <svg id="retrainIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+        <span>Retrain &amp; Benchmark Models</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Metric Highlights Grid -->
+<div class="grid-4" style="margin-bottom: 2rem;">
+  <div class="glass-card" style="padding: 1.25rem;">
+    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Selected Best Model</div>
+    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-cyan); margin: 0.35rem 0;" id="bestModelName">Gradient Boosting</div>
+    <div style="font-size: 0.8rem; color: var(--text-secondary);">Highest F1 (0.8956) &amp; AUC (0.9490)</div>
+  </div>
+
+  <div class="glass-card" style="padding: 1.25rem;">
+    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Held-out Test Samples</div>
+    <div style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0.35rem 0; font-family: monospace;">9,879</div>
+    <div style="font-size: 0.8rem; color: var(--text-secondary);">20% Stratified Holdout Split</div>
+  </div>
+
+  <div class="glass-card" style="padding: 1.25rem;">
+    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Training Set Size</div>
+    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-teal); margin: 0.35rem 0; font-family: monospace;">39,513</div>
+    <div style="font-size: 0.8rem; color: var(--text-secondary);">80% Training Baseline Split</div>
+  </div>
+
+  <div class="glass-card" style="padding: 1.25rem;">
+    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Data Leakage Prevention</div>
+    <div style="font-size: 1.35rem; font-weight: 800; color: #34d399; margin: 0.35rem 0;">Rigorous</div>
+    <div style="font-size: 0.8rem; color: var(--text-secondary);">Pipelines Fit Strictly on Train</div>
+  </div>
+</div>
+
+<!-- Benchmark Metrics Table -->
+<div class="glass-card" style="margin-bottom: 2rem;">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        Held-Out Test Set Performance Comparison
+      </h2>
+      <div class="card-subtitle">All algorithms evaluated on the identical held-out test distribution (9,879 records)</div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table" id="modelsTable">
+      <thead>
+        <tr>
+          <th>Algorithm</th>
+          <th>Accuracy</th>
+          <th>Precision</th>
+          <th>Recall (Sensitivity)</th>
+          <th>F1-Score</th>
+          <th>ROC-AUC</th>
+          <th>Specificity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="modelsTableBody">
+        <!-- Dynamically rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Comparison Charts Grid -->
+<div class="grid-2" style="margin-bottom: 2rem;">
+  <div class="glass-card">
+    <div class="card-header">
+      <h3 class="card-title" style="font-size: 1.05rem;">
+        Algorithm Performance Comparison
+      </h3>
+      <span class="badge badge-cyan">Bar Chart</span>
+    </div>
+    <div style="position: relative; height: 320px;">
+      <canvas id="metricsBarChart" aria-label="Algorithm Metrics Comparison Bar Chart"></canvas>
+    </div>
+  </div>
+
+  <div class="glass-card">
+    <div class="card-header">
+      <h3 class="card-title" style="font-size: 1.05rem;">
+        Multi-Metric Radar Comparison
+      </h3>
+      <span class="badge badge-violet">Radar Chart</span>
+    </div>
+    <div style="position: relative; height: 320px;">
+      <canvas id="radarChart" aria-label="Model Trade-offs Radar Chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Selected Model Confusion Matrix -->
+<div class="grid-2" style="margin-bottom: 2rem;">
+  <div class="glass-card">
+    <div class="card-header">
+      <h3 class="card-title" style="font-size: 1.05rem;">
+        Confusion Matrix (<span id="cmModelTitle">Gradient Boosting</span>)
+      </h3>
+      <span class="badge badge-teal">Test Set (9,879)</span>
+    </div>
+    <div id="confusionMatrixContainer" style="padding: 1rem 0;">
+      <!-- Confusion Matrix Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; text-align: center;">
+        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #6ee7b7; font-weight: 600;">True Negatives (Dry Correctly Predicted)</div>
+          <div style="font-size: 2rem; font-weight: 800; color: #f8fafc; font-family: monospace; margin-top: 0.25rem;" id="cmTN">3,800</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Specificity: ~90.0%</div>
+        </div>
+        <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #fca5a5; font-weight: 600;">False Positives (False Alarms)</div>
+          <div style="font-size: 2rem; font-weight: 800; color: #f8fafc; font-family: monospace; margin-top: 0.25rem;" id="cmFP">422</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Type I Error</div>
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #fcd34d; font-weight: 600;">False Negatives (Missed Rain Events)</div>
+          <div style="font-size: 2rem; font-weight: 800; color: #f8fafc; font-family: monospace; margin-top: 0.25rem;" id="cmFN">729</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Type II Error</div>
+        </div>
+        <div style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #7dd3fc; font-weight: 600;">True Positives (Rain Correctly Predicted)</div>
+          <div style="font-size: 2rem; font-weight: 800; color: #f8fafc; font-family: monospace; margin-top: 0.25rem;" id="cmTP">4,928</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Recall: ~87.1%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unavailable Algorithms Disclosure -->
+  <div class="glass-card">
+    <div class="card-header">
+      <h3 class="card-title" style="font-size: 1.05rem;">
+        Environment &amp; Unavailable Algorithms
+      </h3>
+      <span class="badge badge-amber">Disclosure</span>
+    </div>
+    <div id="unavailableModelsList">
+      <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+          <strong style="color: #fbbf24; font-size: 1rem;">XGBoost (Extreme Gradient Boosting)</strong>
+          <span class="badge badge-amber">Not Installed</span>
+        </div>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.5rem;">
+          The <code>xgboost</code> package is not present in the current Python environment. It can be enabled by running <code>pip install xgboost</code>.
+        </p>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5;">
+          <strong>Alternative:</strong> Scikit-Learn's native <strong>Gradient Boosting</strong> and <strong>Random Forest</strong> algorithms are fully active, delivering top-tier performance (F1: 0.8956, ROC-AUC: 0.9490).
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Methodology & Selection Rationale -->
+<div class="glass-card">
+  <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">
+    Evaluation Methodology &amp; Class Balance Rationale
+  </h2>
+  <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.925rem; color: var(--text-secondary); line-height: 1.6;">
+    <p>
+      <strong>Why Accuracy Alone is Insufficient:</strong> In meteorological time series, precipitation exhibits pronounced seasonal asymmetry—off-monsoon winter months are consistently dry, while monsoon months are intensely wet. If a model trivially predicted "No Rain" during dry seasons or "Rain" during monsoon peaks, it could register high raw accuracy while failing completely when seasonal transitions occur.
+    </p>
+    <p>
+      <strong>Decision Metric:</strong> The selected model is determined by optimizing the harmonic balance of <strong>F1-Score</strong> (the harmonic mean of Precision and Recall) and the <strong>Receiver Operating Characteristic Area Under Curve (ROC-AUC)</strong>. This guarantees that the system minimizes false positives (false alarms for emergency planners) while preventing dangerous false negatives (unpredicted severe rainfall events).
+    </p>
+    <p>
+      <strong>Validation Integrity:</strong> Features are normalized using <code>StandardScaler</code> and categorical subdivisions encoded using <code>OneHotEncoder</code> wrapped strictly inside an isolated Scikit-Learn <code>Pipeline</code>. Transformers are fitted exclusively on the 80% training split, completely preventing test data contamination.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/models.js') }}"></script>
+{% endblock %}
