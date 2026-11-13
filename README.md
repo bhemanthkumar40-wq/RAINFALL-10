@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🌧️ Rainfall Analysis
 
 An empirical weather intelligence and machine learning web application for predicting rainfall chances, evaluating climate precipitation trends, and visualizing meteorological risks across all **36 subdivisions of India**.
@@ -145,3 +146,6 @@ Open **[http://localhost:5000](http://localhost:5000)** in your browser.
 
 **Created by Hemanth_Kumar**  
 *Rainfall Analysis &bull; Empirical Weather Science &amp; Predictive Machine Learning*
+=======
+# RAINFALL-10
+>>>>>>> ffe3c8baf230d6048e980a3bad88f2ced7a3addc
