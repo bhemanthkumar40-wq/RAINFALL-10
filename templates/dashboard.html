@@ -26,7 +26,7 @@
 </div>
 
 <div class="dashboard-layout">
-  <!-- Left Column: Prediction Form & Interactive Map -->
+  <!-- Left Column: Prediction Form & Radar Map -->
   <div style="display: flex; flex-direction: column; gap: 1.5rem;">
     <!-- Prediction Form Card -->
     <div class="glass-card">
@@ -44,14 +44,12 @@
       </div>
 
       <form id="predictionForm" onsubmit="return false;">
-        <!-- Subdivision Selection -->
         <div class="form-group">
           <label for="subdivisionSelect" class="form-label">
             <span>Meteorological Subdivision (India)</span>
             <span style="font-size: 0.75rem; color: var(--accent-cyan);" id="subZoneLabel">Tropical Malabar Littoral</span>
           </label>
           <select id="subdivisionSelect" class="form-control" aria-label="Select Meteorological Subdivision">
-            <!-- Populated dynamically via JS -->
             <option value="KERALA" selected>KERALA</option>
             <option value="COASTAL KARNATAKA">COASTAL KARNATAKA</option>
             <option value="KONKAN & GOA">KONKAN & GOA</option>
@@ -67,7 +65,6 @@
         </div>
 
         <div class="grid-2">
-          <!-- Month Selection -->
           <div class="form-group">
             <label for="monthSelect" class="form-label">
               <span>Target Month</span>
@@ -89,7 +86,6 @@
             </select>
           </div>
 
-          <!-- Machine Learning Model Selection -->
           <div class="form-group">
             <label for="modelSelect" class="form-label">
               <span>Machine Learning Model</span>
@@ -107,7 +103,6 @@
           </div>
         </div>
 
-        <!-- Previous Month Rainfall Slider & Precision Numeric Input -->
         <div class="form-group">
           <label for="prevRainInput" class="form-label">
             <span>Antecedent Precipitation (Previous Month Rainfall)</span>
@@ -131,7 +126,7 @@
       </form>
     </div>
 
-    <!-- Interactive Map Card -->
+    <!-- Interactive Radar Map Card -->
     <div class="glass-card">
       <div class="card-header">
         <div>
@@ -141,39 +136,47 @@
               <line x1="8" y1="2" x2="8" y2="18"></line>
               <line x1="16" y1="6" x2="16" y2="22"></line>
             </svg>
-            Interactive Subdivisional Map of India
+            Live Rainfall Radar — India
           </h2>
-          <div class="card-subtitle">Click any region marker to load historical climate data and predict live rainfall chance</div>
+          <div class="card-subtitle">Observed precipitation radar over subdivision prediction markers</div>
         </div>
-        <div style="display: flex; gap: 0.4rem;" id="mapSeasonPills">
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="mapSeasonPills">
           <button class="btn btn-secondary btn-sm map-month-btn active" data-month="JUL">July (Monsoon)</button>
           <button class="btn btn-secondary btn-sm map-month-btn" data-month="OCT">Oct (Post-Monsoon)</button>
           <button class="btn btn-secondary btn-sm map-month-btn" data-month="JAN">Jan (Winter)</button>
         </div>
       </div>
 
-      <div id="weatherMap" aria-label="Interactive Leaflet Map of India Rainfall Subdivisions"></div>
+      <div id="weatherMap" aria-label="Interactive radar map of India rainfall subdivisions" style="height:480px; min-height:320px; width:100%; border-radius:10px;"></div>
+
+      <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; margin-top:.75rem;">
+        <button id="radarPlayBtn" class="btn btn-secondary btn-sm" type="button">Play radar</button>
+        <input id="radarTimeSlider" type="range" min="0" max="0" value="0" step="1" aria-label="Select radar frame time" style="flex:1; min-width:160px;">
+        <span id="radarTimeLabel" class="card-subtitle" aria-live="polite">Loading radar…</span>
+        <label style="font-size:.8rem; display:flex; align-items:center; gap:.35rem;">
+          <input id="radarVisible" type="checkbox" checked> Radar layer
+        </label>
+      </div>
 
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.85rem; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap; gap: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 1rem;">
           <span style="display: flex; align-items: center; gap: 0.35rem;">
-            <span style="width: 10px; height: 10px; border-radius: 50%; background: #38bdf8;"></span> High Rain (>70%)
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #38bdf8;"></span> High Rain (&gt;70%)
           </span>
           <span style="display: flex; align-items: center; gap: 0.35rem;">
             <span style="width: 10px; height: 10px; border-radius: 50%; background: #2dd4bf;"></span> Moderate Rain (40-70%)
           </span>
           <span style="display: flex; align-items: center; gap: 0.35rem;">
-            <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></span> Low Rain (<40%)
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></span> Low Rain (&lt;40%)
           </span>
         </div>
-        <span>Data: IMD (1901-2015) 36 Subdivisions</span>
+        <span>Radar observations: RainViewer · Markers: IMD historical model</span>
       </div>
     </div>
   </div>
 
   <!-- Right Column: Results & Meteorological Explanations -->
   <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-    <!-- Live Probability Card -->
     <div class="glass-card" id="resultsCard">
       <div class="card-header">
         <div>
@@ -189,7 +192,6 @@
       </div>
 
       <div class="probability-display">
-        <!-- SVG Gauge Meter -->
         <div class="gauge-circle">
           <svg viewBox="0 0 200 200">
             <circle class="gauge-bg" cx="100" cy="100" r="90"></circle>
@@ -211,7 +213,6 @@
         </div>
       </div>
 
-      <!-- Quick Metrics Grid -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1rem; margin-top: 1rem;">
         <div style="background: rgba(7, 13, 24, 0.5); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--surface-border);">
           <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">115-Yr Monthly Normal</div>
@@ -223,18 +224,14 @@
         </div>
       </div>
 
-      <!-- Contributing Factors Breakdown -->
       <div style="margin-top: 1.25rem;">
         <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.6rem;">
           Meteorological Contributing Factors
         </h3>
-        <div id="factorsList" style="display: flex; flex-direction: column; gap: 0.45rem;">
-          <!-- Dynamically populated -->
-        </div>
+        <div id="factorsList" style="display: flex; flex-direction: column; gap: 0.45rem;"></div>
       </div>
     </div>
 
-    <!-- "About this prediction" section (Mandatory requirement) -->
     <div class="glass-card" style="background: rgba(12, 20, 39, 0.65);">
       <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-violet)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -259,5 +256,117 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+(function () {
+  let radarFrames = [];
+  let radarLayer = null;
+  let frameIndex = 0;
+  let playTimer = null;
+  let tileHost = "";
+
+  const metadataUrl = "https://api.rainviewer.com/public/weather-maps.json";
+
+  function setStatus(text) {
+    const label = document.getElementById("radarTimeLabel");
+    if (label) label.textContent = text;
+  }
+
+  function waitForMap(attempt = 0) {
+    if (typeof weatherMap !== "undefined" && weatherMap && typeof L !== "undefined") {
+      initRadar(weatherMap);
+      return;
+    }
+
+    if (attempt < 100) {
+      window.setTimeout(() => waitForMap(attempt + 1), 100);
+    } else {
+      setStatus("Map is not ready");
+    }
+  }
+
+  async function initRadar(map) {
+    try {
+      const response = await fetch(metadataUrl, { cache: "no-store" });
+      if (!response.ok) throw new Error("Radar service unavailable");
+
+      const info = await response.json();
+      tileHost = info.host;
+      radarFrames = info.radar?.past || [];
+
+      if (!tileHost || radarFrames.length === 0) {
+        throw new Error("No recent radar frames available");
+      }
+
+      const slider = document.getElementById("radarTimeSlider");
+      const visibility = document.getElementById("radarVisible");
+      const playButton = document.getElementById("radarPlayBtn");
+
+      slider.max = String(radarFrames.length - 1);
+      frameIndex = radarFrames.length - 1;
+
+      function showFrame(index) {
+        frameIndex = Math.max(0, Math.min(Number(index), radarFrames.length - 1));
+        const frame = radarFrames[frameIndex];
+
+        if (radarLayer) map.removeLayer(radarLayer);
+
+        radarLayer = L.tileLayer(
+          `${tileHost}${frame.path}/256/{z}/{x}/{y}/2/1_0.png`,
+          {
+            opacity: 0.72,
+            maxNativeZoom: 7,
+            maxZoom: 19,
+            attribution: '<a href="https://www.rainviewer.com/">Weather radar by RainViewer</a>'
+          }
+        );
+
+        if (visibility.checked) radarLayer.addTo(map);
+
+        slider.value = String(frameIndex);
+        const time = new Date(frame.time * 1000);
+        setStatus(`Radar: ${time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+      }
+
+      function stopPlayback() {
+        if (playTimer) window.clearInterval(playTimer);
+        playTimer = null;
+        playButton.textContent = "Play radar";
+      }
+
+      slider.addEventListener("input", () => {
+        stopPlayback();
+        showFrame(slider.value);
+      });
+
+      visibility.addEventListener("change", event => {
+        if (!radarLayer) return;
+        if (event.target.checked) radarLayer.addTo(map);
+        else map.removeLayer(radarLayer);
+      });
+
+      playButton.addEventListener("click", () => {
+        if (playTimer) {
+          stopPlayback();
+          return;
+        }
+
+        playButton.textContent = "Pause radar";
+        playTimer = window.setInterval(() => {
+          showFrame((frameIndex + 1) % radarFrames.length);
+        }, 700);
+      });
+
+      showFrame(frameIndex);
+    } catch (error) {
+      console.error("Radar failed to load:", error);
+      setStatus("Radar unavailable");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => waitForMap());
+})();
+</script>
 {% endblock %}
