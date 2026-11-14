@@ -1,113 +1,628 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Rainfall Analysis{% endblock %} - Weather Science & ML</title>
-  
-  <!-- Modern Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  
-  <!-- Leaflet CSS for Interactive Geographic Map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  
-  <!-- Application CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  
-  <!-- Favicon Icon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'><path d='M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z'/></svg>">
-  
-  {% block extra_head %}{% endblock %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Rainfall Analysis{% endblock %} - Weather Science & ML</title>
+
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="">
+
+    <!-- Application CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_head %}{% endblock %}
+
+    <!-- Sidebar Layout CSS -->
+    <style>
+        :root {
+            --sidebar-width: 255px;
+            --sidebar-collapsed-width: 78px;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            padding: 20px 14px;
+            background: #101c30;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            margin-bottom: 22px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 22px;
+        }
+
+        .sidebar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+            min-width: 0;
+        }
+
+        .sidebar .brand-icon {
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+
+        .sidebar .brand-text {
+            font-size: 16px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 22px;
+            padding: 5px;
+        }
+
+        .sidebar-section {
+            color: #8292aa;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 15px 12px;
+        }
+
+        /* NAVIGATION */
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 14px;
+            border-radius: 9px;
+            color: #b9c6d8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .sidebar-link .menu-icon {
+            font-size: 20px;
+            width: 23px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(56,189,248,0.12);
+            color: #38bdf8;
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(90deg, #087db5, #075985);
+            color: white;
+            box-shadow: 0 5px 15px rgba(14,165,233,0.18);
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            color: white;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .sidebar-user .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #087db5;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* MAIN CONTENT */
+
+        .main-layout {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-header {
+            min-height: 80px;
+            padding: 15px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            background: rgba(15,23,42,0.85);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            box-sizing: border-box;
+        }
+
+        .top-header h3 {
+            margin: 0;
+            color: white;
+            font-size: 18px;
+        }
+
+        .top-header p {
+            margin: 5px 0 0;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .dataset-tag {
+            color: #38bdf8;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .content-wrap {
+            flex: 1;
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+            padding: 25px;
+        }
+
+        .app-footer {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 25px;
+        }
+
+        /* COLLAPSED SIDEBAR */
+
+        body.sidebar-collapsed .sidebar {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        body.sidebar-collapsed .main-layout {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        body.sidebar-collapsed .sidebar-label,
+        body.sidebar-collapsed .sidebar-section,
+        body.sidebar-collapsed .sidebar .brand-text {
+            display: none;
+        }
+
+        body.sidebar-collapsed .sidebar-brand {
+            flex-direction: column;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        body.sidebar-collapsed .sidebar .brand {
+            justify-content: center;
+        }
+
+        body.sidebar-collapsed .sidebar-link {
+            justify-content: center;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        /* MOBILE RESPONSIVE */
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 15px 8px;
+            }
+
+            .sidebar-label,
+            .sidebar-section,
+            .sidebar .brand-text {
+                display: none;
+            }
+
+            .sidebar-brand {
+                flex-direction: column;
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            .sidebar .brand {
+                justify-content: center;
+            }
+
+            .sidebar-link {
+                justify-content: center;
+                padding: 13px 5px;
+            }
+
+            .main-layout {
+                margin-left: 70px;
+            }
+
+            .top-header {
+                padding: 12px;
+            }
+
+            .top-header h3 {
+                font-size: 14px;
+            }
+
+            .dataset-tag {
+                display: none;
+            }
+
+            .content-wrap {
+                padding: 12px;
+            }
+
+            .app-footer {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .main-layout {
+                margin-left: 60px;
+            }
+
+            .sidebar-link .menu-icon {
+                font-size: 18px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <!-- Ambient Rain Canvas Background -->
-  <canvas id="ambientRainCanvas"></canvas>
 
-  <div class="app-container">
-    <!-- Main Navigation Bar -->
-    <header class="navbar">
-      <div class="nav-inner">
-        <a href="{{ url_for('index') }}" class="brand" aria-label="Rainfall Analysis Homepage">
-          <div class="brand-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
-            </svg>
-          </div>
-          <span class="brand-text">Rainfall Analysis</span>
-          <span class="brand-tag">Kaggle IMD 1901-2015</span>
-        </a>
+    <!-- Ambient Rain Background -->
+    <canvas id="ambientRainCanvas"></canvas>
 
-        <nav aria-label="Main Navigation">
-          <ul class="nav-links">
-            <li><a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Overview</a></li>
-            <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Live Dashboard</a></li>
-            <li><a href="{{ url_for('models_page') }}" class="nav-link {% if request.path == '/models' %}active{% endif %}">Model Benchmarks</a></li>
-            {% if session.get('user_id') %}
-            <li><a href="{{ url_for('history_page') }}" class="nav-link {% if request.path == '/history' %}active{% endif %}">History</a></li>
-            {% endif %}
-            <li><a href="{{ url_for('about_page') }}" class="nav-link {% if request.path == '/about' %}active{% endif %}">About & Data</a></li>
-          </ul>
-        </nav>
+    <div class="app-container">
 
-        <div class="nav-actions">
-          <a href="{{ url_for('redirect_github') }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="View Source on GitHub" aria-label="GitHub Repository" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span>GitHub</span>
-          </a>
-          {% if session.get('user_id') %}
-          <div class="user-badge" title="Signed in as {{ session.get('user_email') }}">
-            <div class="user-avatar">{{ session.get('user_name', 'U')[0]|upper }}</div>
-            <span>{{ session.get('user_name', 'Account') }}</span>
-          </div>
-          <button id="logoutBtn" class="btn btn-secondary btn-sm" aria-label="Sign Out">Sign Out</button>
-          {% else %}
-          <a href="{{ url_for('login_page') }}" class="btn btn-secondary btn-sm">Sign In</a>
-          <a href="{{ url_for('register_page') }}" class="btn btn-primary btn-sm">Create Account</a>
-          {% endif %}
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+
+            <!-- BRAND -->
+            <div class="sidebar-brand">
+
+                <a href="{{ url_for('index') }}"
+                   class="brand"
+                   aria-label="Rainfall Analysis Homepage">
+
+                    <div class="brand-icon">
+                        <svg width="24" height="24"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2.5"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+
+                        </svg>
+                    </div>
+
+                    <span class="brand-text">Rainfall Analysis</span>
+
+                </a>
+
+                <button class="sidebar-toggle"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar">
+                    ☰
+                </button>
+
+            </div>
+
+            <!-- MAIN MENU -->
+            <div class="sidebar-section">MAIN MENU</div>
+
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+
+                <a href="{{ url_for('index') }}"
+                   class="sidebar-link {% if request.path == '/' %}active{% endif %}">
+
+                    <span class="menu-icon">⌂</span>
+                    <span class="sidebar-label">Overview</span>
+
+                </a>
+
+                <a href="{{ url_for('dashboard') }}"
+                   class="sidebar-link {% if request.path == '/dashboard' %}active{% endif %}">
+
+                    <span class="menu-icon">▦</span>
+                    <span class="sidebar-label">Live Dashboard</span>
+
+                </a>
+
+                <a href="{{ url_for('models_page') }}"
+                   class="sidebar-link {% if request.path == '/models' %}active{% endif %}">
+
+                    <span class="menu-icon">◈</span>
+                    <span class="sidebar-label">Model Benchmarks</span>
+
+                </a>
+
+                {% if session.get('user_id') %}
+
+                <a href="{{ url_for('history_page') }}"
+                   class="sidebar-link {% if request.path == '/history' %}active{% endif %}">
+
+                    <span class="menu-icon">◷</span>
+                    <span class="sidebar-label">History</span>
+
+                </a>
+
+                {% endif %}
+
+                <a href="{{ url_for('about_page') }}"
+                   class="sidebar-link {% if request.path == '/about' %}active{% endif %}">
+
+                    <span class="menu-icon">ⓘ</span>
+                    <span class="sidebar-label">About & Data</span>
+
+                </a>
+
+            </nav>
+
+            <!-- ACCOUNT SECTION -->
+            <div class="sidebar-bottom">
+
+                <div class="sidebar-section">ACCOUNT</div>
+
+                {% if session.get('user_id') %}
+
+                <div class="sidebar-user">
+
+                    <div class="user-avatar">
+                        {{ session.get('user_name', 'U')[0]|upper }}
+                    </div>
+
+                    <span class="sidebar-label">
+                        {{ session.get('user_name', 'Account') }}
+                    </span>
+
+                </div>
+
+                <button id="logoutBtn"
+                        class="sidebar-link"
+                        aria-label="Sign Out">
+
+                    <span class="menu-icon">↪</span>
+                    <span class="sidebar-label">Sign Out</span>
+
+                </button>
+
+                {% else %}
+
+                <a href="{{ url_for('login_page') }}"
+                   class="sidebar-link">
+
+                    <span class="menu-icon">⇥</span>
+                    <span class="sidebar-label">Sign In</span>
+
+                </a>
+
+                <a href="{{ url_for('register_page') }}"
+                   class="sidebar-link">
+
+                    <span class="menu-icon">＋</span>
+                    <span class="sidebar-label">Create Account</span>
+
+                </a>
+
+                {% endif %}
+
+                <a href="{{ url_for('redirect_github') }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="sidebar-link">
+
+                    <span class="menu-icon">⌘</span>
+                    <span class="sidebar-label">GitHub</span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+        <!-- MAIN PAGE LAYOUT -->
+        <div class="main-layout">
+
+            <!-- TOP HEADER -->
+            <header class="top-header">
+
+                <div>
+                    <h3>Rainfall Analysis System</h3>
+                    <p>Weather Science & Machine Learning</p>
+                </div>
+
+                <span class="dataset-tag">
+                    Kaggle IMD 1901-2015
+                </span>
+
+            </header>
+
+            <!-- PAGE CONTENT -->
+            <main class="content-wrap" id="main-content">
+
+                <div id="globalNotificationArea"></div>
+
+                {% block content %}{% endblock %}
+
+            </main>
+
+            <!-- GLOBAL FOOTER -->
+            <footer class="app-footer">
+
+                <ul class="footer-nav">
+
+                    <li>
+                        <a href="{{ url_for('index') }}">Overview</a>
+                    </li>
+
+                    <li>
+                        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+
+                    <li>
+                        <a href="{{ url_for('models_page') }}">Models & Metrics</a>
+                    </li>
+
+                    <li>
+                        <a href="{{ url_for('about_page') }}">Dataset Documentation</a>
+                    </li>
+
+                    <li>
+                        <a href="{{ url_for('redirect_github') }}"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            GitHub Repository
+                        </a>
+                    </li>
+
+                </ul>
+
+                <p style="margin-bottom: 0.5rem;">
+
+                    Dataset Source:
+
+                    <a href="https://www.kaggle.com/datasets/rajanand/rainfall-in-india"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       style="color: var(--accent-cyan); text-decoration: underline;">
+
+                        Kaggle: Rainfall in India (1901-2015)
+
+                    </a>
+
+                    by Raj Anand &amp; Indian Meteorological Department (IMD).
+
+                </p>
+
+                <p>
+
+                    Rainfall Analysis System &bull;
+
+                    <span class="footer-credit">
+                        {{ creator_credit }}
+                    </span>
+
+                    &bull; Meteorological Machine Learning Intelligence
+
+                </p>
+
+            </footer>
+
         </div>
-      </div>
-    </header>
 
-    <!-- Page Content Container -->
-    <main class="content-wrap" id="main-content">
-      <div id="globalNotificationArea"></div>
-      {% block content %}{% endblock %}
-    </main>
+    </div>
 
-    <!-- Global Footer -->
-    <footer class="app-footer">
-      <ul class="footer-nav">
-        <li><a href="{{ url_for('index') }}">Overview</a></li>
-        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li><a href="{{ url_for('models_page') }}">Models & Metrics</a></li>
-        <li><a href="{{ url_for('about_page') }}">Dataset Documentation</a></li>
-        <li><a href="{{ url_for('redirect_github') }}" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
-      </ul>
-      <p style="margin-bottom: 0.5rem;">
-        Dataset Source: <a href="https://www.kaggle.com/datasets/rajanand/rainfall-in-india" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); text-decoration: underline;">Kaggle: Rainfall in India (1901-2015)</a> by Raj Anand &amp; Indian Meteorological Department (IMD).
-      </p>
-      <p>
-        Rainfall Analysis System &bull; <span class="footer-credit">{{ creator_credit }}</span> &bull; Meteorological Machine Learning Intelligence
-      </p>
-    </footer>
-  </div>
+    <!-- GLOBAL TOAST / ALERT -->
+    <div id="toastContainer"
+         style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px;">
+    </div>
 
-  <!-- Global Toast / Alert Template -->
-  <div id="toastContainer" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px;"></div>
+    <!-- LEAFLET MAP JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin="">
+    </script>
 
-  <!-- Leaflet Map JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  
-  <!-- Chart.js for High-Precision Model Visualizations -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- CHART JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
-  <!-- Global Application JS -->
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  
-  {% block extra_scripts %}{% endblock %}
+    <!-- GLOBAL APPLICATION JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- SIDEBAR TOGGLE -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const toggle = document.getElementById("sidebarToggle");
+
+            if (toggle) {
+
+                toggle.addEventListener("click", function () {
+
+                    document.body.classList.toggle("sidebar-collapsed");
+
+                });
+
+            }
+
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+
 </body>
 </html>
