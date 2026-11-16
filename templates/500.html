@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}500 - Internal Server Error{% endblock %}
+{% block title %}500 - Server Error{% endblock %}
+{% block page_title %}Internal Server Error{% endblock %}
+{% block breadcrumb %}500 Error{% endblock %}
 
 {% block content %}
-<div style="text-align: center; padding: 5rem 1rem;">
-  <div style="font-size: 5rem; font-weight: 800; color: #f87171; font-family: monospace; line-height: 1;">500</div>
-  <h1 style="font-size: 1.75rem; font-weight: 700; margin: 1rem 0 0.5rem;">Internal Processing Exception</h1>
-  <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem;">
-    The predictive service encountered an unexpected error while evaluating meteorological data.
-  </p>
-  {% if error %}
-  <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-md); padding: 1rem; max-width: 600px; margin: 0 auto 2rem; color: #fca5a5; font-family: monospace; font-size: 0.85rem; text-align: left;">
-    {{ error }}
-  </div>
-  {% endif %}
-  <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Return to Dashboard</a>
+<div class="content-card" style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 72px; font-weight: 900; color: #DC2626; font-family: monospace; line-height: 1;">500</div>
+    <h2 style="font-size: 22px; font-weight: 700; color: #172033; margin: 16px 0 8px;">Internal Server Exception</h2>
+    <p style="color: #64748B; max-width: 500px; margin: 0 auto 24px; font-size: 14px;">
+        An unexpected error occurred while executing data analysis or machine learning operations.
+    </p>
+    {% if error %}
+    <pre style="background: var(--bg-hover); padding: 12px; border-radius: 8px; border: 1px solid var(--border); max-width: 600px; margin: 0 auto 24px; font-size: 12px; color: #DC2626; overflow-x: auto;">{{ error }}</pre>
+    {% endif %}
+    <a href="{{ url_for('dashboard') }}" class="btn-primary-clean">
+        Return to Analytics Dashboard
+    </a>
 </div>
 {% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Rainfall Intelligence{% endblock %}
+{% block page_title %}Account & Application Settings{% endblock %}
+{% block breadcrumb %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header-banner">
+    <h2 class="page-headline">User Settings & Preferences</h2>
+    <p class="page-subheadline">Manage your credentials, active themes, and platform preferences.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+
+    <!-- Card 1: User Profile Details -->
+    <div class="content-card">
+        <div class="card-header-clean">
+            <div>
+                <h3 class="card-title-clean">Profile Information</h3>
+                <p class="card-desc-clean">Update your account name and review credentials</p>
+            </div>
+            <span class="badge-clean badge-blue">{{ session.get('user_role', 'user')|upper }}</span>
+        </div>
+        <div class="card-body-clean">
+            <form id="profileForm">
+                <div class="form-group-clean">
+                    <label class="form-label-clean">Email Address (Immutable)</label>
+                    <input type="email" class="form-control-clean" value="{{ session.get('user_email', '') }}" disabled style="background: var(--bg-hover); color: var(--text-secondary);">
+                </div>
+
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="settingFullName">Full Name</label>
+                    <input type="text" id="settingFullName" class="form-control-clean" value="{{ session.get('user_name', '') }}" required>
+                </div>
+
+                <button type="submit" id="btnSaveProfile" class="btn-primary-clean">
+                    Update Profile
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Card 2: Security & Password -->
+    <div class="content-card">
+        <div class="card-header-clean">
+            <div>
+                <h3 class="card-title-clean">Security & Password</h3>
+                <p class="card-desc-clean">Change your password using secure cryptographic hashing</p>
+            </div>
+        </div>
+        <div class="card-body-clean">
+            <form id="pwdForm">
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="currentPwd">Current Password</label>
+                    <input type="password" id="currentPwd" class="form-control-clean" placeholder="Enter current password" required>
+                </div>
+
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="newPwd">New Password</label>
+                    <input type="password" id="newPwd" class="form-control-clean" placeholder="At least 6 characters" required>
+                </div>
+
+                <button type="submit" id="btnChangePwd" class="btn-secondary-clean">
+                    Change Password
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<!-- Card 3: Theme & Display Preferences -->
+<div class="content-card">
+    <div class="card-header-clean">
+        <div>
+            <h3 class="card-title-clean">Display & Theme Preferences</h3>
+            <p class="card-desc-clean">Customize visual display modes (Light Theme is default)</p>
+        </div>
+    </div>
+    <div class="card-body-clean">
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div style="padding: 16px; border: 2px solid #2563EB; border-radius: 12px; background: #FFFFFF; flex: 1; cursor: pointer;" onclick="setThemePreference('light')">
+                <div style="font-weight: 700; color: #172033; margin-bottom: 4px;">☀️ Premium Light UI (Default)</div>
+                <div style="font-size: 12px; color: #64748B;">Bright, clean SaaS analytics theme with white cards and dark readable typography.</div>
+            </div>
+
+            <div style="padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-hover); flex: 1; cursor: pointer;" onclick="setThemePreference('dark')">
+                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">🌙 Dark Mode (Optional)</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Secondary dark contrast theme for low-light observation environments.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById("profileForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const fullName = document.getElementById("settingFullName").value.trim();
+    try {
+        const resp = await fetch("/api/auth/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ full_name: fullName })
+        });
+        const res = await resp.json();
+        if (res.success) {
+            showToast("Profile updated successfully.", "success");
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res.error || "Failed to update profile", "error");
+        }
+    } catch (err) {
+        showToast("Error updating profile", "error");
+    }
+};
+
+document.getElementById("pwdForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const currentPassword = document.getElementById("currentPwd").value;
+    const newPassword = document.getElementById("newPwd").value;
+
+    try {
+        const resp = await fetch("/api/auth/change-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+        });
+        const res = await resp.json();
+        if (res.success) {
+            showToast("Password updated successfully.", "success");
+            document.getElementById("pwdForm").reset();
+        } else {
+            showToast(res.error || "Failed to change password", "error");
+        }
+    } catch (err) {
+        showToast("Error changing password", "error");
+    }
+};
+
+function setThemePreference(mode) {
+    if (mode === "dark") {
+        document.body.classList.add("dark-mode");
+        localStorage.setItem("app_theme", "dark");
+        showToast("Switched to Dark Theme", "info");
+    } else {
+        document.body.classList.remove("dark-mode");
+        localStorage.setItem("app_theme", "light");
+        showToast("Switched to Light Theme", "info");
+    }
+}
+</script>
+{% endblock %}

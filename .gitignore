@@ -22,3 +22,7 @@ htmlcov/
 
 # Logs
 *.log
+
+# Trained model caches
+models/*.joblib
+

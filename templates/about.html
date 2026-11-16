@@ -1,152 +1,119 @@
 {% extends "base.html" %}
 
-{% block title %}About & Dataset Documentation{% endblock %}
+{% block title %}About Dataset - Rainfall Intelligence{% endblock %}
+{% block page_title %}About Meteorological Datasets & Methodology{% endblock %}
+{% block breadcrumb %}About Dataset{% endblock %}
 
 {% block content %}
-<div style="max-width: 960px; margin: 0 auto; padding-bottom: 3rem;">
-  <div style="margin-bottom: 2.5rem;">
-    <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); margin-bottom: 1rem;">
-      <span style="font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan); text-transform: uppercase;">Scientific Project Documentation</span>
+<div class="page-header-banner">
+    <h2 class="page-headline">Meteorological Intelligence & Dataset Documentation</h2>
+    <p class="page-subheadline">Comprehensive overview of the 115-year IMD dataset, geographical subdivision breakdown, and machine learning methodology.</p>
+</div>
+
+<!-- Card 1: Project Overview & Credit -->
+<div class="content-card">
+    <div class="card-header-clean">
+        <div>
+            <h3 class="card-title-clean">Project Architecture & Academic Credits</h3>
+            <p class="card-desc-clean">Master of Computer Applications (MCA) Final Project Demonstration</p>
+        </div>
+        <span class="badge-clean badge-green">Production Grade</span>
     </div>
-    <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">About Rainfall Analysis</h1>
-    <p style="color: var(--text-muted); font-size: 1.05rem; margin-top: 0.35rem;">
-      An empirical weather science intelligence system &bull; <strong style="color: var(--accent-cyan);">Created by Hemanth_Kumar</strong>
-    </p>
-  </div>
+    <div class="card-body-clean">
+        <p style="font-size: 14.5px; color: var(--text-primary); line-height: 1.7; margin-bottom: 16px;">
+            <strong>Rainfall Intelligence</strong> is an empirical meteorological analysis and predictive machine learning platform designed to address critical weather forecasting, agricultural scheduling, and flood disaster preparedness challenges across the Indian subcontinent. Developed by <strong>Hemanth Kumar</strong>, this system replaces traditional heuristic weather calculations with 7 transparent machine learning regressors evaluated on transparent, held-out splits.
+        </p>
 
-  <!-- Project Overview Card -->
-  <div class="glass-card" style="margin-bottom: 1.75rem;">
-    <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="16" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-      </svg>
-      Project Overview &amp; Leadership
-    </h2>
-    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
-      <strong>Rainfall Analysis</strong> is an empirical machine learning platform engineered to forecast rainfall probabilities, evaluate precipitation risks, and visualize meteorological trends across the Indian subcontinent. Developed and created by <strong>Hemanth_Kumar</strong>, the system bridges historical climatology and modern statistical machine learning to provide actionable weather intelligence.
-    </p>
-    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Lead Architect &amp; Creator</div>
-        <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-cyan);">Created by Hemanth_Kumar</div>
-      </div>
-      <div>
-        <span class="badge badge-cyan">Meteorological Machine Learning</span>
-      </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+            <div style="background: var(--bg-hover); padding: 16px; border-radius: 10px; border: 1px solid var(--border);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">BACKEND ARCHITECTURE</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">Python 3.14 & Flask 3.1</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">SQLite persistence & session auth</div>
+            </div>
+            <div style="background: var(--bg-hover); padding: 16px; border-radius: 10px; border: 1px solid var(--border);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">MACHINE LEARNING STACK</div>
+                <div style="font-size: 15px; font-weight: 700; color: #2563EB; margin-top: 4px;">Scikit-Learn 1.9 & Pandas 3.1</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">7 regression models with R², MAE, RMSE</div>
+            </div>
+            <div style="background: var(--bg-hover); padding: 16px; border-radius: 10px; border: 1px solid var(--border);">
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">FRONTEND DESIGN SYSTEM</div>
+                <div style="font-size: 15px; font-weight: 700; color: #0D9488; margin-top: 4px;">Light SaaS UI & Chart.js 4.4</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">100% Light theme by default</div>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- Dataset Documentation Card -->
-  <div class="glass-card" style="margin-bottom: 1.75rem;">
-    <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-      </svg>
-      Official Kaggle Dataset Documentation
-    </h2>
-    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
-      The application is powered by the comprehensive historical dataset published on Kaggle:
-      <a href="https://www.kaggle.com/datasets/rajanand/rainfall-in-india" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">
-        Kaggle: Rainfall in India (1901–2015) by Raj Anand
-      </a>, sourced from the Indian Meteorological Department (IMD), Government of India.
-    </p>
-
-    <div class="table-responsive" style="margin-bottom: 1rem;">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Field Name</th>
-            <th>Type</th>
-            <th>Units</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>SUBDIVISION</code></td>
-            <td>Categorical</td>
-            <td>Text</td>
-            <td>36 official IMD meteorological subdivisions across India</td>
-          </tr>
-          <tr>
-            <td><code>YEAR</code></td>
-            <td>Integer</td>
-            <td>Year</td>
-            <td>1901 to 2015 (115 continuous years of recorded data)</td>
-          </tr>
-          <tr>
-            <td><code>JAN - DEC</code></td>
-            <td>Continuous Real</td>
-            <td>Millimeters (mm)</td>
-            <td>Monthly precipitation totals recorded across regional observatories</td>
-          </tr>
-          <tr>
-            <td><code>Jan-Feb</code></td>
-            <td>Continuous Real</td>
-            <td>Millimeters (mm)</td>
-            <td>Winter season precipitation aggregate</td>
-          </tr>
-          <tr>
-            <td><code>Mar-May</code></td>
-            <td>Continuous Real</td>
-            <td>Millimeters (mm)</td>
-            <td>Pre-monsoon / Summer season aggregate</td>
-          </tr>
-          <tr>
-            <td><code>Jun-Sep</code></td>
-            <td>Continuous Real</td>
-            <td>Millimeters (mm)</td>
-            <td>Southwest Monsoon season aggregate (primary crop lifecycle)</td>
-          </tr>
-          <tr>
-            <td><code>Oct-Dec</code></td>
-            <td>Continuous Real</td>
-            <td>Millimeters (mm)</td>
-            <td>Post-monsoon / Northeast Monsoon aggregate</td>
-          </tr>
-          <tr>
-            <td><code>ANNUAL</code></td>
-            <td>Continuous Real</td>
-            <td>Millimeters (mm)</td>
-            <td>Total cumulative rainfall recorded over the calendar year</td>
-          </tr>
-        </tbody>
-      </table>
+<!-- Card 2: Dataset Characteristics -->
+<div class="content-card">
+    <div class="card-header-clean">
+        <div>
+            <h3 class="card-title-clean">IMD 115-Year Climate Data Characteristics</h3>
+            <p class="card-desc-clean">Historical observational data published by the Indian Meteorological Department (1901–2015)</p>
+        </div>
+        <span class="badge-clean badge-blue">Kaggle Verified</span>
     </div>
-  </div>
+    <div class="card-body-clean">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Key Dataset Dimensions</h4>
+                <ul style="padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+                    <li><strong>Temporal Span:</strong> 115 consecutive meteorological calendar years (1901 to 2015).</li>
+                    <li><strong>Geographical Subdivisions:</strong> All 36 official IMD agro-climatic zones across mainland India and union territories.</li>
+                    <li><strong>Monthly Granularity:</strong> Independent rainfall observations for all 12 calendar months (JAN through DEC).</li>
+                    <li><strong>Seasonal Aggregations:</strong> Four seasonal rainfall totals:
+                        <ul>
+                            <li><strong>Jan–Feb:</strong> Winter Non-Monsoon Season</li>
+                            <li><strong>Mar–May:</strong> Pre-Monsoon Summer / Thunderstorm Season</li>
+                            <li><strong>Jun–Sep:</strong> Southwest Summer Monsoon (75% of national precipitation)</li>
+                            <li><strong>Oct–Dec:</strong> Northeast Post-Monsoon / Retreating Monsoon</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
 
-  <!-- Machine Learning & Evaluation Standards -->
-  <div class="glass-card" style="margin-bottom: 1.75rem;">
-    <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-violet)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-      </svg>
-      Machine Learning Methodology &amp; Benchmarks
-    </h2>
-    <div style="color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 0.75rem;">
-      <p>
-        <strong>1. Data Preparation &amp; Leakage Prevention:</strong> Data is split into 80% training (39,513 records) and 20% held-out test (9,879 records) using stratified sampling. Missing values are imputed with subdivisional medians, and all transformations (scaling, one-hot encoding) are encapsulated strictly inside Scikit-Learn <code>Pipeline</code> objects fit exclusively on training data.
-      </p>
-      <p>
-        <strong>2. Algorithm Comparison:</strong> 7 classifiers are trained and benchmarked simultaneously: Gradient Boosting, Random Forest, Logistic Regression, Support Vector Machine (calibrated), Decision Tree, K-Nearest Neighbors, and Naive Bayes. XGBoost is evaluated dynamically and disclosed if not installed.
-      </p>
-      <p>
-        <strong>3. Class Imbalance Handling:</strong> Rainfall occurrences are naturally asymmetric across dry vs monsoon seasons. Rather than relying on misleading raw accuracy, model selection is strictly guided by the harmonic <strong>F1-score</strong> (0.8956) and <strong>ROC-AUC</strong> (0.9490).
-      </p>
+            <div>
+                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">IMD Rainfall Intensity Classification</h4>
+                <div class="clean-table-responsive">
+                    <table class="clean-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Precipitation Limit</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>No / Trace Rain</td>
+                                <td>&lt; 2.5 mm</td>
+                                <td><span class="badge-clean badge-blue">Dry</span></td>
+                            </tr>
+                            <tr>
+                                <td>Light Rain</td>
+                                <td>2.5 to 15.5 mm</td>
+                                <td><span class="badge-clean badge-teal">Mild</span></td>
+                            </tr>
+                            <tr>
+                                <td>Moderate Rain</td>
+                                <td>15.6 to 64.4 mm</td>
+                                <td><span class="badge-clean badge-blue">Normal</span></td>
+                            </tr>
+                            <tr>
+                                <td>Heavy Rain</td>
+                                <td>64.5 to 115.5 mm</td>
+                                <td><span class="badge-clean badge-amber">Warning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Very Heavy / Torrential</td>
+                                <td>&gt; 115.5 mm</td>
+                                <td><span class="badge-clean badge-red">Alert</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <!-- Limitations & Disclaimer -->
-  <div class="glass-card">
-    <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.85rem;">
-      Model Limitations &amp; Ethical Meteorological Disclaimer
-    </h2>
-    <p style="color: var(--text-secondary); line-height: 1.6; font-size: 0.925rem;">
-      The predictions and probability estimates provided by this system are mathematical approximations generated by statistical machine learning models trained on historical observations. While highly accurate for macroscopic planning, local micro-climates, sudden low-pressure depressions, coastal cyclones, and climate change anomalies can create localized deviations. These outputs should be used for research, planning, and academic exploration, and do not replace official emergency forecasts issued by the Indian Meteorological Department (IMD).
-    </p>
-  </div>
 </div>
 {% endblock %}

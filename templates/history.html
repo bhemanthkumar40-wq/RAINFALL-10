@@ -1,95 +1,169 @@
 {% extends "base.html" %}
 
-{% block title %}Prediction History{% endblock %}
+{% block title %}Prediction History - Rainfall Intelligence{% endblock %}
+{% block page_title %}User Prediction History{% endblock %}
+{% block breadcrumb %}Prediction History{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 2rem;">
-  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-    <div>
-      <h1 style="font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em;">Personal Prediction History</h1>
-      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
-        Securely isolated forecast logs for {{ current_user.full_name }} ({{ current_user.email }})
-      </p>
+<div class="page-header-banner">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h2 class="page-headline">Prediction History Log</h2>
+            <p class="page-subheadline">Review, filter, and export your authenticated meteorological forecasts and severity classifications.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/api/history/export" class="btn-secondary-clean">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export CSV
+            </a>
+            <button id="btnClearAllHistory" class="btn-secondary-clean" style="color: #DC2626; border-color: #FECACA;">
+                Clear All History
+            </button>
+        </div>
     </div>
-
-    <div style="display: flex; gap: 0.75rem;">
-      <button id="exportCsvBtn" class="btn btn-secondary btn-sm">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        Export CSV
-      </button>
-      <button id="clearHistoryBtn" class="btn btn-danger btn-sm">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        Clear All Logs
-      </button>
-    </div>
-  </div>
 </div>
 
-<div class="glass-card">
-  <!-- Filter Controls -->
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <label for="historyFilterRegion" style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 500;">Filter by Subdivision:</label>
-      <select id="historyFilterRegion" class="form-control" style="width: 240px; padding: 0.45rem 0.75rem; font-size: 0.875rem;">
-        <option value="">All Subdivisions</option>
-      </select>
+<div class="content-card">
+    <div class="card-header-clean">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <h3 class="card-title-clean">Historical Forecast Records</h3>
+            <input type="text" id="historySearchInput" placeholder="Filter by region or model..." class="form-control-clean" style="width: 250px; padding: 6px 12px; font-size: 13px;">
+        </div>
+        <span class="badge-clean badge-blue" id="historyTotalCountBadge">0 Records</span>
     </div>
-
-    <div style="font-size: 0.85rem; color: var(--text-muted);">
-      Total Logged Forecasts: <strong style="color: var(--accent-cyan);" id="historyTotalCount">0</strong>
+    <div class="clean-table-responsive">
+        <table class="clean-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Region / Subdivision</th>
+                    <th>Model Used</th>
+                    <th>Predicted Rainfall</th>
+                    <th>Severity Category</th>
+                    <th>Confidence</th>
+                    <th>Advisory</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+                        Loading prediction history...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-  </div>
-
-  <!-- Loading State -->
-  <div id="historyLoading" style="text-align: center; padding: 3rem 0; display: none;">
-    <div class="spinner" style="width: 32px; height: 32px; border-width: 3px; border-top-color: var(--accent-cyan); margin: 0 auto 1rem;"></div>
-    <p style="color: var(--text-muted);">Loading your encrypted forecast logs...</p>
-  </div>
-
-  <!-- Empty State -->
-  <div id="historyEmpty" style="text-align: center; padding: 4rem 1rem; display: none;">
-    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
-      </svg>
-    </div>
-    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No Prediction Logs Yet</h3>
-    <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto 1.5rem; font-size: 0.925rem;">
-      Forecasts generated while signed in are automatically stored under your private account.
-    </p>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Make Your First Prediction</a>
-  </div>
-
-  <!-- Table State -->
-  <div class="table-responsive" id="historyTableWrapper" style="display: none;">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Date &amp; Time</th>
-          <th>Subdivision</th>
-          <th>Month</th>
-          <th>Algorithm</th>
-          <th>Probability</th>
-          <th>Classification</th>
-          <th>Projected Rainfall</th>
-          <th style="text-align: right;">Action</th>
-        </tr>
-      </thead>
-      <tbody id="historyTableBody">
-        <!-- Rendered via JS -->
-      </tbody>
-    </table>
-  </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+<script>
+let allPredictions = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadHistory();
+
+    const searchInput = document.getElementById("historySearchInput");
+    searchInput.oninput = (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = allPredictions.filter(p => 
+            p.region.toLowerCase().includes(query) ||
+            p.model_used.toLowerCase().includes(query) ||
+            p.rainfall_category.toLowerCase().includes(query)
+        );
+        renderHistoryRows(filtered);
+    };
+
+    document.getElementById("btnClearAllHistory").onclick = async () => {
+        if (!confirm("Are you sure you want to delete all your past prediction records? This cannot be undone.")) return;
+
+        try {
+            const resp = await fetch("/api/history/clear", { method: "POST" });
+            const res = await resp.json();
+            if (res.success) {
+                showToast(res.message, "success");
+                loadHistory();
+            }
+        } catch (err) {
+            showToast("Failed to clear history", "error");
+        }
+    };
+});
+
+async function loadHistory() {
+    try {
+        const resp = await fetch("/api/history?limit=100");
+        const json = await resp.json();
+
+        if (json.success) {
+            allPredictions = json.predictions || [];
+            document.getElementById("historyTotalCountBadge").textContent = `${allPredictions.length} Records`;
+            renderHistoryRows(allPredictions);
+        }
+    } catch (err) {
+        console.error("Error loading history:", err);
+    }
+}
+
+function renderHistoryRows(predictions) {
+    const tbody = document.getElementById("historyTableBody");
+    if (!tbody) return;
+
+    if (predictions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 35px; color: var(--text-secondary);">
+                    No prediction history found. Run predictions from the <a href="/predict" style="color: #2563EB; font-weight: 600;">Prediction Studio</a>!
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = "";
+    predictions.forEach(p => {
+        const tr = document.createElement("tr");
+
+        let badgeClass = "badge-blue";
+        if (p.rainfall_category.includes("Heavy")) badgeClass = "badge-amber";
+        if (p.rainfall_category.includes("Torrential") || p.rainfall_category.includes("Very Heavy")) badgeClass = "badge-red";
+        if (p.rainfall_category.includes("Light")) badgeClass = "badge-teal";
+
+        tr.innerHTML = `
+            <td style="font-size: 12.5px; color: var(--text-secondary); white-space: nowrap;">${p.created_at}</td>
+            <td style="font-weight: 700; color: var(--text-primary);">${p.region}</td>
+            <td style="font-size: 13px;">${p.model_used}</td>
+            <td style="font-weight: 800; color: #2563EB; font-family: monospace;">${p.predicted_rainfall_mm} mm</td>
+            <td><span class="badge-clean ${badgeClass}">${p.rainfall_category}</span></td>
+            <td style="color: #16A34A; font-weight: 600;">${p.confidence_pct}%</td>
+            <td style="font-size: 12px; color: var(--text-secondary); max-width: 280px;">${p.advisory || 'Normal seasonal forecast'}</td>
+            <td>
+                <button onclick="deleteHistoryItem(${p.id})" style="background: transparent; border: 1px solid #FECACA; color: #DC2626; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer;">
+                    Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function deleteHistoryItem(id) {
+    if (!confirm("Delete this prediction record?")) return;
+    try {
+        const resp = await fetch(`/api/history/${id}`, { method: "DELETE" });
+        const res = await resp.json();
+        if (res.success) {
+            showToast("Prediction record deleted.", "success");
+            loadHistory();
+        }
+    } catch (err) {
+        showToast("Failed to delete record", "error");
+    }
+}
+</script>
 {% endblock %}

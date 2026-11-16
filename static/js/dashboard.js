@@ -1,471 +1,351 @@
-/*
- * Interactive Prediction Dashboard & Geospatial Map
- * Created by Hemanth_Kumar
+/**
+ * Rainfall Intelligence – Dashboard Chart.js Visualizations
+ * Professional, clean light-themed interactive charts.
  */
 
-let weatherMap = null;
-let mapMarkersGroup = null;
-let globalSubdivisions = [];
-let currentActiveMonth = "JUL";
+let monthlyChart = null;
+let yearlyChart = null;
+let distributionChart = null;
+let regionalChart = null;
+let actualVsPredChart = null;
+let seasonalChart = null;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadSubdivisions();
-  initFormSync();
-  initLeafletMap();
-  executePrediction(); // Initial prediction run
+// Light theme Chart.js global defaults
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = "#64748B";
+Chart.defaults.plugins.tooltip.backgroundColor = "#172033";
+Chart.defaults.plugins.tooltip.titleColor = "#FFFFFF";
+Chart.defaults.plugins.tooltip.bodyColor = "#F1F5F9";
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadDashboardVisualizations();
+
+    window.addEventListener("datasetChanged", (e) => {
+        loadDashboardVisualizations(e.detail.dataset);
+    });
 });
 
-// Load all 36 subdivisions from API
-async function loadSubdivisions() {
-  try {
-    const res = await fetch("/api/subdivisions");
-    const data = await res.json();
-    if (data.success) {
-      globalSubdivisions = data.subdivisions;
-      populateSubdivisionDropdown(data.subdivisions);
+async function loadDashboardVisualizations(datasetName) {
+    const activeDataset = datasetName || localStorage.getItem("selected_dataset") || "Subdivision Rainfall (1901-2015)";
+
+    try {
+        // Fetch visualization aggregations
+        const vizResp = await fetch(`/api/datasets/visualizations?dataset=${encodeURIComponent(activeDataset)}`);
+        const vizJson = await vizResp.json();
+
+        // Fetch model benchmark data
+        const modelResp = await fetch(`/api/models?dataset=${encodeURIComponent(activeDataset)}`);
+        const modelJson = await modelResp.json();
+
+        if (vizJson.success) {
+            renderMonthlyTrends(vizJson.data.monthly_trends);
+            renderYearlyTrends(vizJson.data.yearly_trends);
+            renderDistribution(vizJson.data.distribution_bins);
+            renderRegionalComparison(vizJson.data.regional_data);
+            renderSeasonalDoughnut(vizJson.data.seasonal_data);
+        }
+
+        if (modelJson.success) {
+            renderActualVsPredicted(modelJson.report);
+            updateDashboardStats(modelJson.report, activeDataset);
+        }
+    } catch (err) {
+        console.error("Failed to load dashboard data:", err);
     }
-  } catch (err) {
-    console.error("Failed to load subdivisions:", err);
-  }
 }
 
-function populateSubdivisionDropdown(subdivisions) {
-  const select = document.getElementById("subdivisionSelect");
-  if (!select) return;
+function updateDashboardStats(report, datasetName) {
+    if (report && report.best_model) {
+        const bestModelEl = document.getElementById("statBestModel");
+        if (bestModelEl) bestModelEl.textContent = report.best_model;
 
-  select.innerHTML = "";
-  subdivisions.forEach(sub => {
-    const opt = document.createElement("option");
-    opt.value = sub.subdivision;
-    opt.textContent = `${sub.subdivision} (${sub.zone})`;
-    if (sub.subdivision === "KERALA") {
-      opt.selected = true;
+        const bestMetric = report.metrics.find(m => m.model_name === report.best_model);
+        const metricEl = document.getElementById("statBestMetric");
+        if (metricEl && bestMetric) {
+            metricEl.textContent = `R² = ${bestMetric.r2_score}`;
+        }
     }
-    select.appendChild(opt);
-  });
-
-  updateZoneAndHistoricalAverages();
 }
 
-function updateZoneAndHistoricalAverages() {
-  const select = document.getElementById("subdivisionSelect");
-  const monthSelect = document.getElementById("monthSelect");
-  const zoneLabel = document.getElementById("subZoneLabel");
-  const slider = document.getElementById("prevRainSlider");
-  const numInput = document.getElementById("prevRainInput");
-  const valDisplay = document.getElementById("prevRainVal");
-  const normalText = document.getElementById("historicalNormalText");
-  const seasonBadge = document.getElementById("seasonBadge");
+// 1. Monthly Rainfall Trends (Line / Area Chart)
+function renderMonthlyTrends(trends) {
+    const ctx = document.getElementById("monthlyTrendChart");
+    if (!ctx) return;
 
-  if (!select || !monthSelect) return;
+    if (monthlyChart) monthlyChart.destroy();
 
-  const currentSubName = select.value;
-  const currentMonth = monthSelect.value;
-  const subData = globalSubdivisions.find(
-    s => s.subdivision === currentSubName
-  );
+    const labels = Object.keys(trends || {});
+    const values = Object.values(trends || {});
 
-  if (subData) {
-    if (zoneLabel) {
-      zoneLabel.textContent = `${subData.zone} (${subData.capital})`;
-    }
-
-    const months = [
-      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
-    ];
-    const curIdx = months.indexOf(currentMonth);
-    const prevIdx = curIdx > 0 ? curIdx - 1 : 11;
-    const prevMonthName = months[prevIdx];
-    const prevMedian = subData.monthly_medians[prevMonthName] || 50.0;
-
-    if (slider) slider.value = Math.round(prevMedian);
-    if (numInput) numInput.value = prevMedian.toFixed(1);
-    if (valDisplay) valDisplay.textContent = prevMedian.toFixed(1);
-
-    if (normalText) {
-      normalText.textContent =
-        `Historical ${prevMonthName} Median: ${prevMedian} mm`;
-    }
-  }
-
-  if (!seasonBadge) return;
-
-  if (["JUN", "JUL", "AUG", "SEP"].includes(currentMonth)) {
-    seasonBadge.textContent = "Southwest Monsoon";
-    seasonBadge.className = "badge badge-teal";
-  } else if (["OCT", "NOV"].includes(currentMonth)) {
-    seasonBadge.textContent = "Post-Monsoon / Northeast";
-    seasonBadge.className = "badge badge-violet";
-  } else if (["DEC", "JAN", "FEB"].includes(currentMonth)) {
-    seasonBadge.textContent = "Winter Season";
-    seasonBadge.className = "badge badge-cyan";
-  } else {
-    seasonBadge.textContent = "Pre-Monsoon / Summer";
-    seasonBadge.className = "badge badge-amber";
-  }
-}
-
-function initFormSync() {
-  const select = document.getElementById("subdivisionSelect");
-  const monthSelect = document.getElementById("monthSelect");
-  const slider = document.getElementById("prevRainSlider");
-  const numInput = document.getElementById("prevRainInput");
-  const valDisplay = document.getElementById("prevRainVal");
-  const predictBtn = document.getElementById("predictBtn");
-  const modelSelect = document.getElementById("modelSelect");
-  const modelBadge = document.getElementById("modelActiveBadge");
-
-  if (!select || !monthSelect || !slider || !numInput || !predictBtn) {
-    console.error("Prediction form elements are missing.");
-    return;
-  }
-
-  select.addEventListener("change", () => {
-    updateZoneAndHistoricalAverages();
-    executePrediction();
-  });
-
-  monthSelect.addEventListener("change", () => {
-    updateZoneAndHistoricalAverages();
-    currentActiveMonth = monthSelect.value;
-    updateMapData(currentActiveMonth);
-    executePrediction();
-  });
-
-  if (modelSelect) {
-    modelSelect.addEventListener("change", () => {
-      if (modelBadge) modelBadge.textContent = modelSelect.value;
-      executePrediction();
+    monthlyChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Median Rainfall (mm)",
+                data: values,
+                borderColor: "#2563EB",
+                backgroundColor: "rgba(37, 99, 235, 0.08)",
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: "#2563EB",
+                pointBorderColor: "#FFFFFF",
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: "#64748B", font: { weight: 500 } }
+                },
+                y: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                }
+            }
+        }
     });
-  }
-
-  // Keep the rainfall slider and numeric input synchronized.
-  slider.addEventListener("input", () => {
-    const val = parseFloat(slider.value);
-    if (valDisplay) valDisplay.textContent = val.toFixed(1);
-    numInput.value = val.toFixed(1);
-  });
-
-  numInput.addEventListener("input", () => {
-    const val = Math.max(0, Math.min(2500, parseFloat(numInput.value) || 0));
-    slider.value = Math.min(1500, val);
-    if (valDisplay) valDisplay.textContent = val.toFixed(1);
-  });
-
-  predictBtn.addEventListener("click", executePrediction);
 }
 
-// Execute prediction call
-async function executePrediction() {
-  const select = document.getElementById("subdivisionSelect");
-  const monthSelect = document.getElementById("monthSelect");
-  const numInput = document.getElementById("prevRainInput");
-  const modelSelect = document.getElementById("modelSelect");
-  const spinner = document.getElementById("predictBtnSpinner");
-  const btnText = document.getElementById("predictBtnText");
+// 2. 115-Year Rainfall Analysis Timeline
+function renderYearlyTrends(yearlyData) {
+    const ctx = document.getElementById("yearlyTrendChart");
+    if (!ctx) return;
 
-  if (!select || !monthSelect || !numInput) return;
+    if (yearlyChart) yearlyChart.destroy();
 
-  const subdivision = select.value;
-  const month = monthSelect.value;
-  const prevRain = parseFloat(numInput.value) || 0;
-  const modelName = modelSelect
-    ? modelSelect.value
-    : "Gradient Boosting";
+    const labels = (yearlyData || []).map(d => d.year);
+    const values = (yearlyData || []).map(d => d.rainfall_mm);
 
-  if (spinner) spinner.style.display = "inline-block";
-  if (btnText) btnText.textContent = "Predicting...";
-
-  try {
-    const res = await fetch("/api/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subdivision,
-        month,
-        prev_month_rain_mm: prevRain,
-        model_name: modelName
-      })
+    yearlyChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Annual Mean Rainfall (mm)",
+                data: values,
+                borderColor: "#0D9488",
+                backgroundColor: "rgba(13, 148, 136, 0.08)",
+                borderWidth: 2.2,
+                fill: true,
+                tension: 0.25,
+                pointBackgroundColor: "#0D9488",
+                pointRadius: 2,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 12, color: "#64748B" }
+                },
+                y: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                }
+            }
+        }
     });
-
-    const data = await res.json();
-
-    if (data.success && data.prediction) {
-      renderPredictionResult(data.prediction, data.persisted);
-    } else {
-      showToast(data.error || "Prediction request failed", "error");
-    }
-  } catch (err) {
-    console.error("Prediction request failed:", err);
-    showToast("Network error executing prediction", "error");
-  } finally {
-    if (spinner) spinner.style.display = "none";
-    if (btnText) {
-      btnText.textContent = "Calculate Rainfall Probability";
-    }
-  }
 }
 
-// Render contributing factors and animate the result gauge.
-function renderPredictionResult(pred, persisted) {
-  const gauge = document.getElementById("gaugeProgress");
-  const pctText = document.getElementById("probPercentage");
-  const riskLabel = document.getElementById("probRiskLabel");
-  const verdict = document.getElementById("predictionVerdict");
-  const intensity = document.getElementById("intensityEstimate");
-  const estMm = document.getElementById("estAmountMm");
-  const monthlyNormal = document.getElementById("monthlyNormalMm");
-  const annualMean = document.getElementById("annualMeanMm");
-  const factorsList = document.getElementById("factorsList");
-  const subtitle = document.getElementById("resultSubtitle");
-  const persistedBadge = document.getElementById("persistedBadge");
+// 3. Rainfall Distribution Histogram
+function renderDistribution(bins) {
+    const ctx = document.getElementById("distributionChart");
+    if (!ctx) return;
 
-  if (!pred) return;
+    if (distributionChart) distributionChart.destroy();
 
-  // Gauge circumference: 2 * PI * 90.
-  const circumference = 2 * Math.PI * 90;
-  const probability = Math.max(
-    0,
-    Math.min(100, Number(pred.rain_probability_pct) || 0)
-  );
-  const offset = circumference - (circumference * probability / 100);
+    const labels = (bins || []).map(b => b.range);
+    const values = (bins || []).map(b => b.count);
 
-  if (gauge) gauge.style.strokeDashoffset = offset;
-
-  if (gauge) {
-    if (probability >= 75) {
-      gauge.style.stroke = "var(--accent-cyan)";
-    } else if (probability >= 45) {
-      gauge.style.stroke = "var(--accent-teal)";
-    } else {
-      gauge.style.stroke = "var(--rain-low)";
-    }
-  }
-
-  if (pctText) pctText.textContent = `${probability}%`;
-  if (riskLabel) riskLabel.textContent = pred.risk_level || "";
-  if (verdict) verdict.textContent = pred.prediction_label || "";
-
-  if (estMm) {
-    estMm.textContent = `${pred.estimated_amount_mm ?? "—"} mm`;
-  }
-
-  if (intensity) {
-    intensity.innerHTML =
-      `Projected Volume: <strong style="color: var(--accent-cyan); font-family: monospace;">` +
-      `${pred.estimated_amount_mm ?? "—"} mm</strong> &bull; ` +
-      `${pred.rainfall_category || ""}`;
-  }
-
-  if (monthlyNormal) {
-    monthlyNormal.textContent =
-      `${pred.historical_subdivision_normal_mm ?? "—"} mm`;
-  }
-
-  if (annualMean) {
-    annualMean.textContent =
-      `${pred.annual_mean_rainfall_mm ?? "—"} mm`;
-  }
-
-  if (subtitle) {
-    subtitle.textContent =
-      `${pred.subdivision || ""} • ${pred.month || ""} (${pred.zone || ""})`;
-  }
-
-  if (persistedBadge) {
-    persistedBadge.style.display = persisted ? "inline-flex" : "none";
-  }
-
-  if (factorsList) {
-    factorsList.innerHTML = "";
-
-    (pred.contributing_factors || []).forEach(f => {
-      const item = document.createElement("div");
-      item.style.cssText = `
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: rgba(7, 13, 24, 0.6);
-        padding: 0.5rem 0.75rem;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--surface-border);
-        font-size: 0.8rem;
-      `;
-
-      const isWet = f.type === "wet";
-      item.innerHTML = `
-        <span style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-primary);">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isWet ? "var(--accent-cyan)" : "#f59e0b"};"></span>
-          ${f.factor || ""}
-        </span>
-        <span style="color: ${isWet ? "var(--accent-teal)" : "#fcd34d"}; font-size: 0.75rem;">
-          ${f.impact || ""}
-        </span>
-      `;
-
-      factorsList.appendChild(item);
+    distributionChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Record Frequency",
+                data: values,
+                backgroundColor: "#3B82F6",
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { maxRotation: 45, minRotation: 25, color: "#64748B", font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                }
+            }
+        }
     });
-  }
 }
 
-// Initialize the Leaflet map for Indian rainfall subdivisions.
-function initLeafletMap() {
-  const mapEl = document.getElementById("weatherMap");
-  if (!mapEl) return;
+// 4. Regional Rainfall Comparison (Bar Chart)
+function renderRegionalComparison(regionalData) {
+    const ctx = document.getElementById("regionalChart");
+    if (!ctx) return;
 
-  if (typeof L === "undefined") {
-    console.error(
-      "Leaflet is missing. Load Leaflet CSS and JavaScript before dashboard.js."
-    );
-    mapEl.textContent = "Map library failed to load. Please refresh the page.";
-    return;
-  }
+    if (regionalChart) regionalChart.destroy();
 
-  weatherMap = L.map(mapEl, {
-    zoomControl: true,
-    scrollWheelZoom: false
-  }).setView([22.5, 79.5], 5);
+    const labels = (regionalData || []).map(r => r.region);
+    const values = (regionalData || []).map(r => r.rainfall_mm);
 
-  // Public OpenStreetMap raster tiles; no API key is required.
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-  }).addTo(weatherMap);
-
-  mapMarkersGroup = L.layerGroup().addTo(weatherMap);
-
-  const pills = document.querySelectorAll(".map-month-btn");
-  pills.forEach(btn => {
-    btn.addEventListener("click", () => {
-      pills.forEach(p => p.classList.remove("active"));
-      btn.classList.add("active");
-
-      const month = btn.getAttribute("data-month");
-      if (!month) return;
-
-      currentActiveMonth = month;
-      updateMapData(month);
+    regionalChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Average Annual Rainfall (mm)",
+                data: values,
+                backgroundColor: values.map(v => v > 2000 ? "#2563EB" : (v < 600 ? "#F59E0B" : "#0D9488")),
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: "#172033", font: { size: 11, weight: 600 } }
+                }
+            }
+        }
     });
-  });
-
-  updateMapData(currentActiveMonth);
-
-  // Correct map sizing if the dashboard layout finishes rendering afterward.
-  window.setTimeout(() => weatherMap.invalidateSize(), 100);
 }
 
-// Load predictions and add markers for all subdivisions.
-async function updateMapData(month = "JUL") {
-  if (!weatherMap || !mapMarkersGroup) return;
+// 5. Actual vs Predicted Comparison
+function renderActualVsPredicted(report) {
+    const ctx = document.getElementById("actualVsPredChart");
+    if (!ctx) return;
 
-  try {
-    const res = await fetch(
-      `/api/map-data?month=${encodeURIComponent(month)}`
-    );
-    if (!res.ok) {
-      throw new Error(`Map data request failed (${res.status})`);
-    }
+    if (actualVsPredChart) actualVsPredChart.destroy();
 
-    const data = await res.json();
+    const actual = report.actual_samples || [];
+    const predicted = report.predicted_samples || [];
+    const sampleLabels = actual.map((_, i) => `#${i + 1}`);
 
-    if (!data.success || !Array.isArray(data.regions)) {
-      throw new Error(data.error || "Map data response was invalid.");
-    }
-
-    mapMarkersGroup.clearLayers();
-
-    data.regions.forEach(reg => {
-      const latitude = Number(reg.latitude);
-      const longitude = Number(reg.longitude);
-
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
-
-      const pred = reg.current_model_prediction;
-      const probability = pred
-        ? Number(pred.rain_probability_pct) || 0
-        : 50;
-
-      let markerColor = "#10b981";
-      if (probability >= 75) markerColor = "#38bdf8";
-      else if (probability >= 45) markerColor = "#2dd4bf";
-
-      const annualRain = Number(reg.annual_rainfall_mean_mm) || 1000;
-      const radius = Math.max(7, Math.min(16, annualRain / 250));
-
-      const marker = L.circleMarker([latitude, longitude], {
-        radius,
-        fillColor: markerColor,
-        color: "#ffffff",
-        weight: 1.5,
-        opacity: 0.9,
-        fillOpacity: 0.75
-      });
-
-      // Build popup DOM safely instead of interpolating server text into HTML.
-      const popup = document.createElement("div");
-      popup.style.minWidth = "200px";
-      popup.style.fontFamily = "inherit";
-
-      const title = document.createElement("div");
-      title.textContent = reg.subdivision || "Subdivision";
-      title.style.cssText =
-        "font-size: .95rem; font-weight: 700; margin-bottom: .2rem;";
-
-      const details = document.createElement("div");
-      details.textContent =
-        `${reg.zone || ""} • ${reg.capital || ""}`;
-      details.style.cssText =
-        "font-size: .75rem; color: #64748b; margin-bottom: .5rem;";
-
-      const stats = document.createElement("div");
-      stats.style.cssText =
-        "padding: .5rem; border-radius: 6px; margin-bottom: .6rem; font-size: .8rem;";
-
-      const rainLine = document.createElement("div");
-      rainLine.textContent = `${month} rain chance: ${probability}%`;
-
-      const annualLine = document.createElement("div");
-      annualLine.textContent =
-        `Annual normal: ${reg.annual_rainfall_mean_mm ?? "—"} mm`;
-
-      const monsoonLine = document.createElement("div");
-      monsoonLine.textContent =
-        `Monsoon normal: ${reg.monsoon_rainfall_mean_mm ?? "—"} mm`;
-
-      stats.append(rainLine, annualLine, monsoonLine);
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "btn btn-primary btn-sm";
-      button.textContent = "Load in Predictor";
-      button.style.cssText =
-        "width: 100%; padding: .35rem; font-size: .8rem;";
-      button.addEventListener("click", () => {
-        selectSubdivisionOnMap(reg.subdivision);
-      });
-
-      popup.append(title, details, stats, button);
-      marker.bindPopup(popup);
-      mapMarkersGroup.addLayer(marker);
+    actualVsPredChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: sampleLabels,
+            datasets: [
+                {
+                    label: "Actual Rainfall (mm)",
+                    data: actual,
+                    borderColor: "#172033",
+                    backgroundColor: "transparent",
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.1
+                },
+                {
+                    label: `Predicted (${report.best_model || "ML Model"})`,
+                    data: predicted,
+                    borderColor: "#2563EB",
+                    backgroundColor: "transparent",
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 3,
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: { color: "#172033", font: { weight: 600 } }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 15, color: "#64748B" }
+                },
+                y: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                }
+            }
+        }
     });
-  } catch (err) {
-    console.error("Failed to load map data:", err);
-  }
 }
 
-// Select a subdivision from a map popup.
-window.selectSubdivisionOnMap = function(subdivisionName) {
-  const select = document.getElementById("subdivisionSelect");
-  if (!select) return;
+// 6. Seasonal Contribution Doughnut
+function renderSeasonalDoughnut(seasonalData) {
+    const ctx = document.getElementById("seasonalChart");
+    if (!ctx) return;
 
-  select.value = subdivisionName;
-  updateZoneAndHistoricalAverages();
-  executePrediction();
+    if (seasonalChart) seasonalChart.destroy();
 
-  const form = document.getElementById("predictionForm");
-  if (form) {
-    form.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-};
+    const labels = Object.keys(seasonalData || {});
+    const values = Object.values(seasonalData || {});
+
+    seasonalChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    "#60A5FA", // Jan-Feb
+                    "#34D399", // Mar-May
+                    "#2563EB", // Jun-Sep (Monsoon)
+                    "#F59E0B"  // Oct-Dec
+                ],
+                borderWidth: 2,
+                borderColor: "#FFFFFF"
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: { color: "#172033", font: { size: 11, weight: 500 }, padding: 12 }
+                }
+            },
+            cutout: "65%"
+        }
+    });
+}

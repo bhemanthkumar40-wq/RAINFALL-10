@@ -1,230 +1,284 @@
 /**
- * Model Performance Benchmarks & Visualizations
- * Created by Hemanth_Kumar
+ * Rainfall Intelligence – Model Benchmarking & Comparison JavaScript
+ * Renders comparison tables, error charts, and handles retraining.
  */
 
-let barChartInstance = null;
-let radarChartInstance = null;
+let r2Chart = null;
+let errorChart = null;
+let testTrackingChart = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadModelBenchmarks();
-  initRetrainHandler();
+    loadModelBenchmarks();
+
+    // Retrain UI Controls
+    const openBtn = document.getElementById("btnOpenRetrainModal");
+    const closeBtn = document.getElementById("btnCloseRetrain");
+    const retrainCard = document.getElementById("retrainCard");
+    const slider = document.getElementById("splitSlider");
+    const ratioDisplay = document.getElementById("splitRatioDisplay");
+    const execBtn = document.getElementById("btnExecuteRetrain");
+
+    if (openBtn) openBtn.onclick = () => retrainCard.style.display = "block";
+    if (closeBtn) closeBtn.onclick = () => retrainCard.style.display = "none";
+
+    if (slider) {
+        slider.oninput = (e) => {
+            const testPct = parseInt(e.target.value);
+            const trainPct = 100 - testPct;
+            ratioDisplay.textContent = `${trainPct}% Train / ${testPct}% Test`;
+        };
+    }
+
+    if (execBtn) {
+        execBtn.onclick = async () => {
+            const activeDataset = localStorage.getItem("selected_dataset") || "Subdivision Rainfall (1901-2015)";
+            const testSize = parseFloat(slider.value) / 100.0;
+            execBtn.disabled = true;
+            execBtn.textContent = "Training 7 Algorithms...";
+
+            try {
+                const resp = await fetch("/api/models/train", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ dataset_name: activeDataset, test_size: testSize })
+                });
+                const res = await resp.json();
+
+                if (res.success) {
+                    showToast(res.message, "success");
+                    retrainCard.style.display = "none";
+                    loadModelBenchmarks(activeDataset);
+                } else {
+                    showToast(res.error || "Training failed", "error");
+                }
+            } catch (err) {
+                showToast("Error retraining models", "error");
+            } finally {
+                execBtn.disabled = false;
+                execBtn.textContent = "Execute Multi-Model Training";
+            }
+        };
+    }
+
+    window.addEventListener("datasetChanged", (e) => {
+        loadModelBenchmarks(e.detail.dataset);
+    });
 });
 
-async function loadModelBenchmarks() {
-  try {
-    const res = await fetch("/api/models");
-    const data = await res.json();
-
-    if (data.success && data.report) {
-      renderBenchmarks(data.report);
-    }
-  } catch (err) {
-    console.error("Failed to fetch model benchmarks:", err);
-  }
-}
-
-function renderBenchmarks(report) {
-  const tableBody = document.getElementById("modelsTableBody");
-  const selectedName = report.selected_model_name;
-
-  if (document.getElementById("bestModelName")) {
-    document.getElementById("bestModelName").textContent = selectedName;
-  }
-
-  // Populate Table
-  if (tableBody) {
-    tableBody.innerHTML = "";
-    report.metrics.forEach(m => {
-      const isSelected = m.model_name === selectedName;
-      const tr = document.createElement("tr");
-      if (isSelected) tr.classList.add("selected-row");
-
-      tr.innerHTML = `
-        <td style="font-weight: 600;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            ${m.model_name}
-            ${isSelected ? '<span class="badge badge-cyan" style="font-size: 0.65rem;">Selected</span>' : ''}
-          </div>
-        </td>
-        <td><span class="metric-pill">${(m.accuracy * 100).toFixed(1)}%</span></td>
-        <td><span style="font-family: monospace;">${m.precision.toFixed(4)}</span></td>
-        <td><span style="font-family: monospace;">${m.recall.toFixed(4)}</span></td>
-        <td><strong style="color: var(--accent-cyan); font-family: monospace;">${m.f1_score.toFixed(4)}</strong></td>
-        <td><strong style="color: var(--accent-teal); font-family: monospace;">${m.roc_auc.toFixed(4)}</strong></td>
-        <td><span style="font-family: monospace;">${m.specificity.toFixed(4)}</span></td>
-        <td><span class="badge badge-emerald" style="font-size: 0.65rem;">Trained</span></td>
-      `;
-      tableBody.appendChild(tr);
-    });
-  }
-
-  // Render Charts
-  renderBarChart(report.metrics);
-  renderRadarChart(report.metrics);
-
-  // Update Confusion Matrix for Selected Model
-  const topModel = report.metrics.find(m => m.model_name === selectedName) || report.metrics[0];
-  if (topModel && topModel.confusion_matrix) {
-    const cm = topModel.confusion_matrix;
-    document.getElementById("cmTN").textContent = cm.true_negatives.toLocaleString();
-    document.getElementById("cmFP").textContent = cm.false_positives.toLocaleString();
-    document.getElementById("cmFN").textContent = cm.false_negatives.toLocaleString();
-    document.getElementById("cmTP").textContent = cm.true_positives.toLocaleString();
-    document.getElementById("cmModelTitle").textContent = topModel.model_name;
-  }
-}
-
-// Chart.js Bar Chart
-function renderBarChart(metrics) {
-  const canvas = document.getElementById("metricsBarChart");
-  if (!canvas) return;
-
-  const labels = metrics.map(m => m.model_name);
-  const f1Scores = metrics.map(m => m.f1_score);
-  const rocAucScores = metrics.map(m => m.roc_auc);
-  const accuracies = metrics.map(m => m.accuracy);
-
-  if (barChartInstance) barChartInstance.destroy();
-
-  barChartInstance = new Chart(canvas, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "F1-Score (Primary Metric)",
-          data: f1Scores,
-          backgroundColor: "rgba(56, 189, 248, 0.8)",
-          borderRadius: 4
-        },
-        {
-          label: "ROC-AUC Score",
-          data: rocAucScores,
-          backgroundColor: "rgba(45, 212, 191, 0.8)",
-          borderRadius: 4
-        },
-        {
-          label: "Accuracy",
-          data: accuracies,
-          backgroundColor: "rgba(129, 140, 248, 0.7)",
-          borderRadius: 4
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: "#cbd5e1", font: { family: "inherit" } }
-        },
-        tooltip: {
-          backgroundColor: "rgba(7, 13, 24, 0.95)",
-          borderColor: "rgba(56, 189, 248, 0.3)",
-          borderWidth: 1
-        }
-      },
-      scales: {
-        y: {
-          min: 0.75,
-          max: 1.0,
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
-          ticks: { color: "#94a3b8" }
-        },
-        x: {
-          grid: { display: false },
-          ticks: { color: "#cbd5e1", font: { size: 11 } }
-        }
-      }
-    }
-  });
-}
-
-// Chart.js Radar Chart
-function renderRadarChart(metrics) {
-  const canvas = document.getElementById("radarChart");
-  if (!canvas) return;
-
-  // Pick top 3 models for clean radar comparison
-  const topThree = metrics.slice(0, 3);
-  const radarCategories = ["Accuracy", "Precision", "Recall", "F1-Score", "ROC-AUC", "Specificity"];
-
-  const colors = [
-    { border: "#38bdf8", bg: "rgba(56, 189, 248, 0.2)" },
-    { border: "#2dd4bf", bg: "rgba(45, 212, 191, 0.2)" },
-    { border: "#818cf8", bg: "rgba(129, 140, 248, 0.2)" }
-  ];
-
-  const datasets = topThree.map((m, idx) => ({
-    label: m.model_name,
-    data: [m.accuracy, m.precision, m.recall, m.f1_score, m.roc_auc, m.specificity],
-    borderColor: colors[idx].border,
-    backgroundColor: colors[idx].bg,
-    borderWidth: 2,
-    pointRadius: 3
-  }));
-
-  if (radarChartInstance) radarChartInstance.destroy();
-
-  radarChartInstance = new Chart(canvas, {
-    type: "radar",
-    data: {
-      labels: radarCategories,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: "#cbd5e1" }
-        }
-      },
-      scales: {
-        r: {
-          min: 0.8,
-          max: 1.0,
-          grid: { color: "rgba(255, 255, 255, 0.08)" },
-          angleLines: { color: "rgba(255, 255, 255, 0.08)" },
-          pointLabels: { color: "#cbd5e1", font: { size: 11 } },
-          ticks: { display: false }
-        }
-      }
-    }
-  });
-}
-
-// Retrain Button Handler
-function initRetrainHandler() {
-  const retrainBtn = document.getElementById("retrainModelsBtn");
-  const spinner = document.getElementById("retrainSpinner");
-  const icon = document.getElementById("retrainIcon");
-
-  if (!retrainBtn) return;
-
-  retrainBtn.addEventListener("click", async () => {
-    retrainBtn.disabled = true;
-    spinner.style.display = "inline-block";
-    icon.style.display = "none";
+async function loadModelBenchmarks(datasetName) {
+    const activeDataset = datasetName || localStorage.getItem("selected_dataset") || "Subdivision Rainfall (1901-2015)";
+    const badge = document.getElementById("datasetNameBadge");
+    if (badge) badge.textContent = activeDataset;
 
     try {
-      showToast("Initiating stratified retraining across 49,392 records...", "info");
-      const res = await fetch("/api/models/train", { method: "POST" });
-      const data = await res.json();
+        const resp = await fetch(`/api/models?dataset=${encodeURIComponent(activeDataset)}`);
+        const json = await resp.json();
 
-      if (data.success && data.report) {
-        renderBenchmarks(data.report);
-        showToast("Models retrained and benchmarked successfully!", "success");
-      } else {
-        showToast(data.error || "Training failed", "error");
-      }
+        if (json.success && json.report) {
+            renderComparisonTable(json.report.metrics);
+            updateSummaryCards(json.report);
+            renderR2Chart(json.report.metrics);
+            renderErrorChart(json.report.metrics);
+            renderTrackingChart(json.report);
+        }
     } catch (err) {
-      showToast("Network error retraining models", "error");
-    } finally {
-      retrainBtn.disabled = false;
-      spinner.style.display = "none";
-      icon.style.display = "inline-block";
+        console.error("Error loading model benchmarks:", err);
     }
-  });
+}
+
+function renderComparisonTable(metrics) {
+    const tbody = document.getElementById("modelsTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    metrics.forEach(m => {
+        const tr = document.createElement("tr");
+        if (m.is_best) tr.style.backgroundColor = "#F0FDF4";
+
+        tr.innerHTML = `
+            <td style="font-weight: 600; color: #172033;">
+                ${m.is_best ? '⭐ ' : ''}${m.model_name}
+            </td>
+            <td>
+                <span class="badge-clean ${m.is_best ? 'badge-green' : 'badge-blue'}" style="font-size: 13px;">
+                    ${m.r2_score.toFixed(4)}
+                </span>
+            </td>
+            <td style="font-family: monospace; font-weight: 600;">${m.mae.toFixed(2)} mm</td>
+            <td style="font-family: monospace; color: var(--text-secondary);">${m.mse.toLocaleString()}</td>
+            <td style="font-family: monospace; font-weight: 600;">${m.rmse.toFixed(2)} mm</td>
+            <td style="font-family: monospace;">${m.mape.toFixed(2)}%</td>
+            <td style="font-size: 12px; color: var(--text-secondary);">${m.training_time.toFixed(3)}s</td>
+            <td>
+                ${m.is_best
+                    ? '<span class="badge-clean badge-green">Best Regressor</span>'
+                    : '<span class="badge-clean badge-teal">Benchmark Ready</span>'}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function updateSummaryCards(report) {
+    const metrics = report.metrics || [];
+    if (metrics.length === 0) return;
+
+    const best = metrics.find(m => m.is_best) || metrics[0];
+    document.getElementById("topModelName").textContent = best.model_name;
+    document.getElementById("topModelR2").textContent = `R² = ${best.r2_score}`;
+    document.getElementById("topModelMae").innerHTML = `${best.mae.toFixed(2)} <span style="font-size: 16px; font-weight: normal; color: var(--text-secondary);">mm</span>`;
+    document.getElementById("topModelRmse").innerHTML = `${best.rmse.toFixed(2)} <span style="font-size: 16px; font-weight: normal; color: var(--text-secondary);">mm</span>`;
+
+    // Fastest model
+    const fastest = [...metrics].sort((a, b) => a.training_time - b.training_time)[0];
+    if (fastest) {
+        document.getElementById("fastestModel").textContent = fastest.model_name;
+        document.getElementById("fastestTime").textContent = `${fastest.training_time.toFixed(3)}s`;
+    }
+}
+
+function renderR2Chart(metrics) {
+    const ctx = document.getElementById("r2Chart");
+    if (!ctx) return;
+
+    if (r2Chart) r2Chart.destroy();
+
+    const sorted = [...metrics].sort((a, b) => b.r2_score - a.r2_score);
+    const labels = sorted.map(m => m.model_name);
+    const values = sorted.map(m => m.r2_score);
+
+    r2Chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "R² Score",
+                data: values,
+                backgroundColor: sorted.map(m => m.is_best ? "#16A34A" : "#2563EB"),
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    min: 0.8,
+                    max: 1.0,
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: "#172033", font: { weight: 600 } }
+                }
+            }
+        }
+    });
+}
+
+function renderErrorChart(metrics) {
+    const ctx = document.getElementById("errorChart");
+    if (!ctx) return;
+
+    if (errorChart) errorChart.destroy();
+
+    const labels = metrics.map(m => m.model_name);
+    const maeValues = metrics.map(m => m.mae);
+    const rmseValues = metrics.map(m => m.rmse);
+
+    errorChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "MAE (mm)",
+                    data: maeValues,
+                    backgroundColor: "#0D9488",
+                    borderRadius: 4
+                },
+                {
+                    label: "RMSE (mm)",
+                    data: rmseValues,
+                    backgroundColor: "#F59E0B",
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "top" }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { maxRotation: 35, color: "#64748B", font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                }
+            }
+        }
+    });
+}
+
+function renderTrackingChart(report) {
+    const ctx = document.getElementById("testTrackingChart");
+    if (!ctx) return;
+
+    if (testTrackingChart) testTrackingChart.destroy();
+
+    const actual = report.actual_samples || [];
+    const pred = report.predicted_samples || [];
+    const labels = actual.map((_, i) => `Point ${i + 1}`);
+
+    testTrackingChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Ground Truth (Actual IMD mm)",
+                    data: actual,
+                    borderColor: "#172033",
+                    backgroundColor: "transparent",
+                    borderWidth: 2,
+                    pointRadius: 3
+                },
+                {
+                    label: `Predicted (${report.best_model})`,
+                    data: pred,
+                    borderColor: "#16A34A",
+                    backgroundColor: "rgba(22, 163, 74, 0.05)",
+                    borderWidth: 2,
+                    borderDash: [4, 4],
+                    pointRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "top" }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 20, color: "#64748B" }
+                },
+                y: {
+                    grid: { color: "#F1F5F9" },
+                    ticks: { color: "#64748B" }
+                }
+            }
+        }
+    });
 }
