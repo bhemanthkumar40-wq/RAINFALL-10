@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset Management - Rainfall Intelligence{% endblock %}
+{% block page_title %}Meteorological Dataset Management{% endblock %}
+{% block breadcrumb %}Dataset Management{% endblock %}
+
+{% block content %}
+<div class="page-header-banner">
+    <h2 class="page-headline">Dataset Management & Ingestion</h2>
+    <p class="page-subheadline">Inspect active meteorological databases, upload new CSV or Excel weather files, and preview schemas.</p>
+</div>
+
+<!-- ==========================================
+     TOP: DRAG & DROP UPLOAD + DATASET SELECTOR
+     ========================================== -->
+<div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 24px; align-items: start;">
+
+    <!-- Drag & Drop Upload Card -->
+    <div class="content-card">
+        <div class="card-header-clean">
+            <div>
+                <h3 class="card-title-clean">Upload Future Weather Datasets</h3>
+                <p class="card-desc-clean">Ingest future rainfall observations (.csv, .xlsx, .xls up to 50MB)</p>
+            </div>
+            <span class="badge-clean badge-blue">Pandas Engine</span>
+        </div>
+        <div class="card-body-clean">
+            <div id="dropZone" style="border: 2px dashed #93C5FD; background: #F0F9FF; border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer; transition: all 0.2s ease;">
+                <input type="file" id="fileUploadInput" accept=".csv,.xlsx,.xls" style="display: none;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #DBEAFE; color: #2563EB; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <div style="font-size: 15px; font-weight: 700; color: #1E40AF; margin-bottom: 4px;">Drag and drop your dataset here</div>
+                <div style="font-size: 13px; color: #3B82F6;">or click to browse from your computer</div>
+                <div style="font-size: 11px; color: #64748B; margin-top: 10px;">Supports CSV, XLSX, XLS formats</div>
+            </div>
+            <div id="uploadStatusText" style="margin-top: 12px; font-size: 13px; font-weight: 600; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Active Dataset Selector & Info Card -->
+    <div class="content-card">
+        <div class="card-header-clean">
+            <div>
+                <h3 class="card-title-clean">Registered Datasets</h3>
+                <p class="card-desc-clean">Switch between active rainfall databases</p>
+            </div>
+            <span class="badge-clean badge-teal">{{ all_datasets|length }} Available</span>
+        </div>
+        <div class="card-body-clean">
+            <div style="display: flex; flex-direction: column; gap: 10px;" id="registeredDatasetsList">
+                {% for ds in all_datasets %}
+                <div style="padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: {% if loop.first %}#EFF6FF{% else %}var(--bg-card){% endif %}; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);">{{ ds.name }}</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">{{ ds.rows_count|default(0) }} records &bull; {{ ds.cols_count|default(0) }} columns</div>
+                    </div>
+                    <button class="btn-secondary-clean" onclick="selectDataset('{{ ds.name }}')" style="padding: 6px 12px; font-size: 12px;">
+                        Set Active
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ==========================================
+     DATASET PREVIEW (FIRST 10 RECORDS)
+     ========================================== -->
+<div class="content-card">
+    <div class="card-header-clean">
+        <div>
+            <h3 class="card-title-clean">Dataset Schema Preview (First 10 Records)</h3>
+            <p class="card-desc-clean" id="previewSubtitle">Showing top sample rows from active dataset</p>
+        </div>
+        <span class="badge-clean badge-blue" id="previewBadge">First 10 Rows</span>
+    </div>
+    <div class="clean-table-responsive" style="max-height: 480px; overflow-y: auto;">
+        <table class="clean-table" id="previewTable">
+            <thead id="previewThead">
+                <tr><th>Loading...</th></tr>
+            </thead>
+            <tbody id="previewTbody">
+                <tr><td>Loading dataset records...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    loadDatasetPreview();
+
+    window.addEventListener("datasetChanged", (e) => {
+        loadDatasetPreview(e.detail.dataset);
+    });
+
+    // Drag and Drop Upload logic
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileUploadInput");
+    const statusText = document.getElementById("uploadStatusText");
+
+    dropZone.onclick = () => fileInput.click();
+
+    dropZone.ondragover = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#2563EB";
+        dropZone.style.backgroundColor = "#EFF6FF";
+    };
+
+    dropZone.ondragleave = () => {
+        dropZone.style.borderColor = "#93C5FD";
+        dropZone.style.backgroundColor = "#F0F9FF";
+    };
+
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#93C5FD";
+        dropZone.style.backgroundColor = "#F0F9FF";
+        if (e.dataTransfer.files.length > 0) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    };
+
+    fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+            handleFileUpload(fileInput.files[0]);
+        }
+    };
+
+    async function handleFileUpload(file) {
+        statusText.style.display = "block";
+        statusText.style.color = "#2563EB";
+        statusText.textContent = `Uploading and parsing "${file.name}"...`;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const resp = await fetch("/api/datasets/upload", {
+                method: "POST",
+                body: formData
+            });
+            const res = await resp.json();
+
+            if (res.success) {
+                statusText.style.color = "#16A34A";
+                statusText.textContent = res.message;
+                showToast(res.message, "success");
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                statusText.style.color = "#DC2626";
+                statusText.textContent = res.error || "Upload failed.";
+                showToast(res.error || "Upload failed.", "error");
+            }
+        } catch (err) {
+            statusText.style.color = "#DC2626";
+            statusText.textContent = "Upload network error.";
+            showToast("Upload network error", "error");
+        }
+    }
+});
+
+function selectDataset(name) {
+    localStorage.setItem("selected_dataset", name);
+    const select = document.getElementById("globalDatasetSelect");
+    if (select) select.value = name;
+    showToast(`Active dataset set to "${name}"`, "success");
+    loadDatasetPreview(name);
+}
+
+async function loadDatasetPreview(datasetName) {
+    const activeDataset = datasetName || localStorage.getItem("selected_dataset") || "Subdivision Rainfall (1901-2015)";
+
+    try {
+        const resp = await fetch(`/api/datasets/inspect?dataset=${encodeURIComponent(activeDataset)}`);
+        const json = await resp.json();
+
+        if (json.success && json.inspection) {
+            const insp = json.inspection;
+            document.getElementById("previewSubtitle").textContent = `${activeDataset} (${insp.total_rows.toLocaleString()} rows, ${insp.total_columns} columns)`;
+
+            const thead = document.getElementById("previewThead");
+            const tbody = document.getElementById("previewTbody");
+
+            thead.innerHTML = `<tr>${insp.columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
+            tbody.innerHTML = "";
+
+            insp.first_10_rows.forEach((row, i) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = insp.columns.map(c => `<td>${row[c] !== undefined ? row[c] : ''}</td>`).join('');
+                tbody.appendChild(tr);
+            });
+        }
+    } catch (err) {
+        console.error("Error previewing dataset:", err);
+    }
+}
+</script>
+{% endblock %}

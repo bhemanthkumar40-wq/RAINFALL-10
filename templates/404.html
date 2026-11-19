@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+{% block page_title %}Page Not Found{% endblock %}
+{% block breadcrumb %}404 Error{% endblock %}
+
+{% block content %}
+<div class="content-card" style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 72px; font-weight: 900; color: #2563EB; font-family: monospace; line-height: 1;">404</div>
+    <h2 style="font-size: 22px; font-weight: 700; color: #172033; margin: 16px 0 8px;">Resource Not Found</h2>
+    <p style="color: #64748B; max-width: 480px; margin: 0 auto 24px; font-size: 14px;">
+        The requested rainfall intelligence resource, model view, or page endpoint could not be found.
+    </p>
+    <a href="{{ url_for('dashboard') }}" class="btn-primary-clean">
+        Return to Analytics Dashboard
+    </a>
+</div>
+{% endblock %}

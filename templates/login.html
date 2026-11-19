@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Rainfall Intelligence</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background-color: #FFFFFF;">
+
+<div class="auth-split-wrapper">
+
+    <!-- LEFT SECTION: Rainfall & Weather Intelligence Showcase -->
+    <div class="auth-hero-left">
+        <!-- Brand Header -->
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="brand-icon-box" style="width: 44px; height: 44px;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <div style="font-size: 18px; font-weight: 800; color: #172033; letter-spacing: -0.02em;">RAINFALL INTELLIGENCE</div>
+                <div style="font-size: 11px; font-weight: 700; color: #0D9488; text-transform: uppercase; letter-spacing: 0.06em;">Smart Weather Analytics & Machine Learning</div>
+            </div>
+        </div>
+
+        <!-- Center Visual Showcase -->
+        <div style="max-width: 500px; margin: 30px 0;">
+            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; background: #FFFFFF; border: 1px solid #E5EAF1; border-radius: 9999px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #2563EB;"></span>
+                <span style="font-size: 12px; font-weight: 600; color: #2563EB;">115-Year IMD Meteorological Records</span>
+            </div>
+
+            <h1 style="font-size: 32px; font-weight: 800; line-height: 1.25; color: #172033; letter-spacing: -0.02em; margin-bottom: 14px;">
+                Advanced Rainfall Analysis & <span style="color: #2563EB;">Predictive Intelligence</span>
+            </h1>
+
+            <p style="font-size: 15px; color: #64748B; line-height: 1.6; margin-bottom: 24px;">
+                Empower meteorological research and agricultural planning with machine learning algorithms, held-out regression benchmarks, and interactive climate intelligence.
+            </p>
+
+            <!-- Weather Feature Grid Cards -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div style="background: #FFFFFF; border: 1px solid #E5EAF1; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                    <div style="font-size: 20px; font-weight: 800; color: #2563EB; font-family: monospace;">7 ML Models</div>
+                    <div style="font-size: 12px; color: #64748B;">Multi-algorithm comparison & fair regression scoring</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #E5EAF1; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                    <div style="font-size: 20px; font-weight: 800; color: #0D9488; font-family: monospace;">4,757+ Records</div>
+                    <div style="font-size: 12px; color: #64748B;">Subdivision & district historical datasets included</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Footer -->
+        <div style="font-size: 12px; color: #94A3B8;">
+            &copy; 2026 Rainfall Intelligence Platform &bull; Developed by Hemanth Kumar
+        </div>
+    </div>
+
+    <!-- RIGHT SECTION: Clean White Login Card -->
+    <div class="auth-form-right">
+        <div class="auth-card-inner">
+            <div style="margin-bottom: 26px;">
+                <h2 style="font-size: 24px; font-weight: 800; color: #172033; letter-spacing: -0.02em;">Welcome Back</h2>
+                <p style="font-size: 13.5px; color: #64748B; margin-top: 4px;">Sign in to your Rainfall Intelligence account</p>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="loginAlert" style="display: none; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 18px;"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control-clean" placeholder="name@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group-clean">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label-clean" for="password" style="margin-bottom: 0;">Password</label>
+                        <a href="javascript:void(0)" onclick="alert('Please contact your administrator at admin@rainfall.org to reset credentials.')" style="font-size: 12px; color: #2563EB;">Forgot password?</a>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="password" id="password" class="form-control-clean" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 40px;">
+                        <button type="button" id="togglePasswordBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #64748B; cursor: pointer;" title="Show/Hide Password">
+                            👁
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748B; cursor: pointer;">
+                        <input type="checkbox" id="rememberMe" checked style="accent-color: #2563EB;">
+                        Remember me on this device
+                    </label>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-primary-clean" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px;">
+                    Sign In to Dashboard
+                </button>
+            </form>
+
+            <!-- Quick Demo Credentials Selector -->
+            <div style="margin-top: 24px; padding: 14px; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 10px;">
+                <div style="font-size: 11.5px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Demo Fast Login:</div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn-secondary-clean" onclick="fillCredentials('admin@rainfall.org', 'Admin@1234')" style="flex: 1; padding: 6px 10px; font-size: 12px; justify-content: center;">
+                        🔑 Admin Account
+                    </button>
+                    <button type="button" class="btn-secondary-clean" onclick="fillCredentials('bhemanthkumar40@gmail.com', 'Admin@1234')" style="flex: 1; padding: 6px 10px; font-size: 12px; justify-content: center;">
+                        👤 User Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Sign up link -->
+            <div style="text-align: center; margin-top: 24px; font-size: 13.5px; color: #64748B;">
+                Don't have an account? 
+                <a href="{{ url_for('register_page') }}" style="font-weight: 600; color: #2563EB;">Create Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/Hide password toggle
+const toggleBtn = document.getElementById("togglePasswordBtn");
+const pwdInput = document.getElementById("password");
+toggleBtn.addEventListener("click", () => {
+    const isPwd = pwdInput.type === "password";
+    pwdInput.type = isPwd ? "text" : "password";
+    toggleBtn.textContent = isPwd ? "🙈" : "👁";
+});
+
+function fillCredentials(email, pwd) {
+    document.getElementById("email").value = email;
+    document.getElementById("password").value = pwd;
+}
+
+// Form Submission via Fetch API
+const form = document.getElementById("loginForm");
+const alertBox = document.getElementById("loginAlert");
+const submitBtn = document.getElementById("submitBtn");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    alertBox.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Authenticating...";
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+        const resp = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+        const res = await resp.json();
+
+        if (res.success) {
+            alertBox.style.display = "block";
+            alertBox.style.backgroundColor = "#F0FDF4";
+            alertBox.style.border = "1px solid #86EFAC";
+            alertBox.style.color = "#166534";
+            alertBox.textContent = "Login successful! Redirecting to Dashboard...";
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 600);
+        } else {
+            alertBox.style.display = "block";
+            alertBox.style.backgroundColor = "#FEF2F2";
+            alertBox.style.border = "1px solid #FECACA";
+            alertBox.style.color = "#991B1B";
+            alertBox.textContent = res.error || "Invalid email or password.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Sign In to Dashboard";
+        }
+    } catch (err) {
+        alertBox.style.display = "block";
+        alertBox.style.backgroundColor = "#FEF2F2";
+        alertBox.style.border = "1px solid #FECACA";
+        alertBox.style.color = "#991B1B";
+        alertBox.textContent = "Connection error. Please try again.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In to Dashboard";
+    }
+});
+</script>
+
+</body>
+</html>

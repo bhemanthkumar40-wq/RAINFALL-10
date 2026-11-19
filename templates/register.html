@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Rainfall Intelligence</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background-color: #FFFFFF;">
+
+<div class="auth-split-wrapper">
+
+    <!-- LEFT SECTION -->
+    <div class="auth-hero-left">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="brand-icon-box" style="width: 44px; height: 44px;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <div style="font-size: 18px; font-weight: 800; color: #172033; letter-spacing: -0.02em;">RAINFALL INTELLIGENCE</div>
+                <div style="font-size: 11px; font-weight: 700; color: #0D9488; text-transform: uppercase; letter-spacing: 0.06em;">Meteorological Forecasting Platform</div>
+            </div>
+        </div>
+
+        <div style="max-width: 500px; margin: 30px 0;">
+            <h1 style="font-size: 32px; font-weight: 800; line-height: 1.25; color: #172033; letter-spacing: -0.02em; margin-bottom: 14px;">
+                Join the <span style="color: #2563EB;">Weather Intelligence</span> Platform
+            </h1>
+            <p style="font-size: 15px; color: #64748B; line-height: 1.6; margin-bottom: 24px;">
+                Register to upload custom rainfall datasets, train multi-model machine learning benchmarks, perform real-time predictions, and analyze historical precipitation cycles.
+            </p>
+
+            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
+                <li style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #172033;">
+                    <span style="color: #16A34A; font-weight: bold;">✓</span> 7 Scikit-Learn Regression Models with held-out metrics
+                </li>
+                <li style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #172033;">
+                    <span style="color: #16A34A; font-weight: bold;">✓</span> IMD 115-Year historical datasets preloaded
+                </li>
+                <li style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #172033;">
+                    <span style="color: #16A34A; font-weight: bold;">✓</span> Drag-and-drop CSV / XLSX dataset upload & analysis
+                </li>
+            </ul>
+        </div>
+
+        <div style="font-size: 12px; color: #94A3B8;">
+            &copy; 2026 Rainfall Intelligence &bull; Developed by Hemanth Kumar
+        </div>
+    </div>
+
+    <!-- RIGHT SECTION -->
+    <div class="auth-form-right">
+        <div class="auth-card-inner">
+            <div style="margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 800; color: #172033; letter-spacing: -0.02em;">Create Your Account</h2>
+                <p style="font-size: 13.5px; color: #64748B; margin-top: 4px;">Get started in seconds with secure authentication</p>
+            </div>
+
+            <div id="registerAlert" style="display: none; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 18px;"></div>
+
+            <form id="registerForm">
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="fullName">Full Name</label>
+                    <input type="text" id="fullName" class="form-control-clean" placeholder="e.g. Hemanth Kumar" required autocomplete="name">
+                </div>
+
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control-clean" placeholder="name@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="password">Password</label>
+                    <input type="password" id="password" class="form-control-clean" placeholder="Minimum 6 characters" required autocomplete="new-password">
+                </div>
+
+                <div class="form-group-clean">
+                    <label class="form-label-clean" for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-control-clean" placeholder="Re-enter your password" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-primary-clean" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px; margin-top: 8px;">
+                    Create Account
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 24px; font-size: 13.5px; color: #64748B;">
+                Already have an account? 
+                <a href="{{ url_for('login_page') }}" style="font-weight: 600; color: #2563EB;">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const form = document.getElementById("registerForm");
+const alertBox = document.getElementById("registerAlert");
+const submitBtn = document.getElementById("submitBtn");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    alertBox.style.display = "none";
+
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (password !== confirmPassword) {
+        alertBox.style.display = "block";
+        alertBox.style.backgroundColor = "#FEF2F2";
+        alertBox.style.border = "1px solid #FECACA";
+        alertBox.style.color = "#991B1B";
+        alertBox.textContent = "Passwords do not match. Please verify.";
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Creating Account...";
+
+    try {
+        const resp = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ full_name: fullName, email, password })
+        });
+        const res = await resp.json();
+
+        if (res.success) {
+            alertBox.style.display = "block";
+            alertBox.style.backgroundColor = "#F0FDF4";
+            alertBox.style.border = "1px solid #86EFAC";
+            alertBox.style.color = "#166534";
+            alertBox.textContent = "Account created successfully! Redirecting to Dashboard...";
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 600);
+        } else {
+            alertBox.style.display = "block";
+            alertBox.style.backgroundColor = "#FEF2F2";
+            alertBox.style.border = "1px solid #FECACA";
+            alertBox.style.color = "#991B1B";
+            alertBox.textContent = res.error || "Failed to create account.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Create Account";
+        }
+    } catch (err) {
+        alertBox.style.display = "block";
+        alertBox.style.backgroundColor = "#FEF2F2";
+        alertBox.style.border = "1px solid #FECACA";
+        alertBox.style.color = "#991B1B";
+        alertBox.textContent = "Connection error. Please try again.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Create Account";
+    }
+});
+</script>
+
+</body>
+</html>

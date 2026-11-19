@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Empirical Weather Intelligence & ML Forecasting{% endblock %}
+
+{% block content %}
+<div class="landing-hero" style="padding: 2.5rem 0 3.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 2.5rem; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 320px;">
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); margin-bottom: 1.25rem;">
+        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan);"></span>
+        <span style="font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.06em;">Kaggle IMD Dataset Integrated</span>
+      </div>
+
+      <h1 style="font-size: 3rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; letter-spacing: -0.03em;">
+        Predict Rainfall Chances With <span style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Scientific Machine Learning</span>
+      </h1>
+
+      <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 2rem; max-width: 620px; line-height: 1.6;">
+        Trained on the official 115-year dataset from the Indian Meteorological Department (1901–2015), comparing 7 classification algorithms to forecast rainfall probabilities across all 36 subdivisions of India with transparent held-out benchmarks.
+      </p>
+
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-accent" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Open Live Dashboard
+        </a>
+        <a href="{{ url_for('models_page') }}" class="btn btn-secondary" style="padding: 0.85rem 1.5rem; font-size: 1rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Explore Model Benchmarks
+        </a>
+      </div>
+
+      <!-- Quick Metrics Ribbon -->
+      <div style="display: flex; gap: 2rem; flex-wrap: wrap; border-top: 1px solid var(--surface-border); padding-top: 1.5rem;">
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); font-family: monospace;">115</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Years (1901-2015)</div>
+        </div>
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--accent-cyan); font-family: monospace;">36</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">IMD Subdivisions</div>
+        </div>
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--accent-teal); font-family: monospace;">7</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">ML Algorithms</div>
+        </div>
+        <div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: var(--accent-violet); font-family: monospace;">0.949</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Held-out ROC-AUC</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atmospheric Radar Simulation Graphic -->
+    <div style="flex: 0 0 320px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+      <div class="glass-card" style="padding: 2rem; text-align: center; width: 100%;">
+        <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-cyan); margin-bottom: 1rem; font-weight: 600;">
+          Active Doppler Radar Scan
+        </div>
+        
+        <div class="radar-simulation">
+          <div class="radar-grid"></div>
+          <div class="radar-sweep"></div>
+          <div style="position: absolute; top: 38%; left: 45%; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-teal); box-shadow: 0 0 12px var(--accent-teal);"></div>
+          <div style="position: absolute; top: 62%; left: 32%; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan);"></div>
+          <div style="position: absolute; top: 50%; left: 70%; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-violet); box-shadow: 0 0 10px var(--accent-violet);"></div>
+        </div>
+
+        <div style="margin-top: 1.25rem;">
+          <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">All 36 Subdivisions Live</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Continuous multi-seasonal pattern inference</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<section style="margin-bottom: 4rem;">
+  <div style="text-align: center; margin-bottom: 2.5rem;">
+    <h2 style="font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem;">
+      Engineered for Meteorological Precision
+    </h2>
+    <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">
+      A full-stack weather intelligence system built with rigorous machine learning evaluation, interactive geospatial mapping, and verifiable data provenance.
+    </p>
+  </div>
+
+  <div class="grid-3">
+    <div class="glass-card">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">All 36 Indian Subdivisions</h3>
+      <p style="color: var(--text-secondary); font-size: 0.925rem; line-height: 1.5;">
+        Every IMD zone—from Coastal Karnataka and Kerala to West Rajasthan and Assam—is mapped with true geographical coordinates and 115-year historical medians.
+      </p>
+    </div>
+
+    <div class="glass-card">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(45, 212, 191, 0.15); color: var(--accent-teal); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">7 Machine Learning Models</h3>
+      <p style="color: var(--text-secondary); font-size: 0.925rem; line-height: 1.5;">
+        Trains and compares Random Forest, Gradient Boosting, Logistic Regression, SVM, Decision Tree, KNN, and Naive Bayes on held-out test data.
+      </p>
+    </div>
+
+    <div class="glass-card">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(129, 140, 248, 0.15); color: var(--accent-violet); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">Secure Persistence & History</h3>
+      <p style="color: var(--text-secondary); font-size: 0.925rem; line-height: 1.5;">
+        Complete user registration and login with cryptographic password hashing (never plaintext) and strict user-ownership separation for prediction records.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Call to action card -->
+<div class="glass-card" style="padding: 2.5rem; text-align: center; background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(129, 140, 248, 0.08)); border-color: rgba(56, 189, 248, 0.3);">
+  <h2 style="font-size: 1.85rem; font-weight: 700; margin-bottom: 0.75rem;">Ready to Analyze Weather Patterns?</h2>
+  <p style="color: var(--text-secondary); max-width: 580px; margin: 0 auto 1.5rem; font-size: 1rem;">
+    Access live probability projections, view regional climate averages across India, or inspect model ROC-AUC benchmarks.
+  </p>
+  <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-accent">Launch Analysis Dashboard</a>
+    {% if not session.get('user_id') %}
+    <a href="{{ url_for('register_page') }}" class="btn btn-secondary">Create Free Account</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
