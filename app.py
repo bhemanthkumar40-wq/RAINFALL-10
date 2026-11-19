@@ -156,10 +156,11 @@ if __name__ == "__main__":
         
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+<<<<<<< HEAD
     # IMPORTANT: Expose Flask instance at module level for Vercel
 app = create_app()
 
-# Local development only
+# Local development onlygit add app.py vercel.json
 if __name__ == "__main__":
     try:
         print("Warm-training machine learning models on start...")
@@ -170,3 +171,5 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+=======
+>>>>>>> 61bc4d38d028ba0bb67becd097ec0fd34e9e0e02
